@@ -5,8 +5,6 @@ import ServicesSection from "@/components/ServicesSection";
 import Link from "next/link";
 import { Stethoscope, Syringe, Heart, Activity } from "lucide-react";
 
-export const dynamic = 'force-dynamic';
-
 export default function Home() {
   return (
     <>
