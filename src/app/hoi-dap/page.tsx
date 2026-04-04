@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { HelpCircle, ChevronDown, ChevronUp, MessageSquare, Send } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 const faqs = [
   {
@@ -29,6 +30,26 @@ const faqs = [
 
 export default function QAPage() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const [formData, setFormData] = useState({ name: '', question: '' });
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const { error } = await supabase
+      .from('questions')
+      .insert([formData]);
+    setLoading(false);
+    if (!error) {
+      setSuccess(true);
+      setFormData({ name: '', question: '' });
+      setTimeout(() => setSuccess(false), 5000);
+    } else {
+      console.error('Supabase Insert Error (questions):', error);
+      alert('Có lỗi xảy ra: ' + error.message + '. Vui lòng kiểm tra console.');
+    }
+  };
 
   return (
     <>
@@ -77,17 +98,53 @@ export default function QAPage() {
                 ))}
               </div>
 
-              <div className="mt-12 bg-[var(--primary-light)] rounded-3xl p-8 text-center border border-[var(--primary)] border-opacity-10">
-                <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-[var(--primary)] mx-auto mb-4 shadow-sm">
-                  <MessageSquare className="w-8 h-8" />
+              <div className="mt-12 bg-white rounded-3xl p-8 shadow-[var(--shadow)] border border-[var(--gray-100)]">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-12 h-12 bg-[var(--primary-light)] rounded-xl flex items-center justify-center text-[var(--primary)]">
+                    <MessageSquare className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-[var(--gray-800)]">Gửi câu hỏi của bạn</h3>
+                    <p className="text-[14px] text-[var(--gray-500)]">Chúng tôi sẽ phản hồi sớm nhất qua website</p>
+                  </div>
                 </div>
-                <h3 className="text-xl font-bold text-[var(--primary)] mb-3">Vẫn còn thắc mắc?</h3>
-                <p className="text-[14.5px] text-[var(--gray-600)] max-w-lg mx-auto mb-6">
-                  Nếu bạn không tìm thấy câu trả lời cho thắc mắc của mình, hãy gửi câu hỏi cho chúng tôi. Đội ngũ y tế sẽ phản hồi sớm nhất.
-                </p>
-                <Link href="/lien-he" className="btn-hero-primary inline-flex">
-                  <Send className="w-4 h-4" /> Gửi câu hỏi ngay
-                </Link>
+
+                {success && (
+                  <div className="bg-[var(--green-light)] text-[var(--green)] p-4 rounded-xl mb-6 font-bold text-sm">
+                    Cảm ơn bạn! Câu hỏi đã được gửi thành công.
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-[var(--gray-700)]">Họ và tên</label>
+                    <input 
+                      type="text" 
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      className="w-full bg-[var(--gray-50)] border border-[var(--gray-200)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--primary)] transition-all"
+                      placeholder="Nguyễn Văn A" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-[var(--gray-700)]">Nội dung câu hỏi</label>
+                    <textarea 
+                      required
+                      value={formData.question}
+                      onChange={(e) => setFormData({...formData, question: e.target.value})}
+                      className="w-full bg-[var(--gray-50)] border border-[var(--gray-200)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--primary)] transition-all min-h-[120px]"
+                      placeholder="Nhập câu hỏi của bạn tại đây..."
+                    ></textarea>
+                  </div>
+                  <button 
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-[var(--primary)] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-[var(--primary-dark)] transition-all disabled:opacity-50"
+                  >
+                    {loading ? 'Đang gửi...' : <><Send className="w-5 h-5" /> Gửi câu hỏi</>}
+                  </button>
+                </form>
               </div>
             </div>
 

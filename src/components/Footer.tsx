@@ -42,34 +42,31 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="text-sm font-bold text-white mb-4 pb-2.5 border-b-2 border-[var(--primary)] inline-block">Trang chủ</h4>
+            <h4 className="text-sm font-bold text-white mb-4 pb-2.5 border-b-2 border-[var(--primary)] inline-block">Tin tức & Thông báo</h4>
             <ul className="text-[13px] space-y-2">
-              <li><Link href="/gioi-thieu" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Giới thiệu trạm</Link></li>
-              <li><Link href="/gioi-thieu" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Cán bộ y tế</Link></li>
               <li><Link href="/tin-tuc" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Tin tức hoạt động</Link></li>
-              <li><Link href="/tin-tuc" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Thông báo</Link></li>
+              <li><Link href="/thong-bao" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Thông báo</Link></li>
+              <li><Link href="/suc-khoe" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Kiến thức sức khỏe</Link></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="text-sm font-bold text-white mb-4 pb-2.5 border-b-2 border-[var(--primary)] inline-block">Dịch vụ</h4>
+            <h4 className="text-sm font-bold text-white mb-4 pb-2.5 border-b-2 border-[var(--primary)] inline-block">Dịch vụ & Tài liệu</h4>
             <ul className="text-[13px] space-y-2">
-              <li><Link href="/dich-vu" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Khám chữa bệnh</Link></li>
-              <li><Link href="/dich-vu" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Tiêm chủng</Link></li>
-              <li><Link href="/dich-vu" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">SK Sinh sản</Link></li>
-              <li><Link href="/dich-vu" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Bệnh mãn tính</Link></li>
-              <li><Link href="/dich-vu" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Y tế dự phòng</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-bold text-white mb-4 pb-2.5 border-b-2 border-[var(--primary)] inline-block">Liên kết</h4>
-            <ul className="text-[13px] space-y-2">
-              <li><a href="https://syt.quangninh.gov.vn" target="_blank" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Sở Y tế Quảng Ninh</a></li>
-              <li><a href="https://moh.gov.vn" target="_blank" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Bộ Y tế Việt Nam</a></li>
+              <li><Link href="/dich-vu" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Dịch vụ y tế</Link></li>
               <li><Link href="/tai-lieu" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Tài liệu y tế</Link></li>
               <li><Link href="/thu-vien" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Thư viện ảnh</Link></li>
+              <li><Link href="/hoi-dap" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Hỏi đáp</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="text-sm font-bold text-white mb-4 pb-2.5 border-b-2 border-[var(--primary)] inline-block">Thông tin khác</h4>
+            <ul className="text-[13px] space-y-2">
+              <li><Link href="/gioi-thieu" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Giới thiệu trạm</Link></li>
               <li><Link href="/lien-he" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Liên hệ</Link></li>
+              <li><a href="https://syt.quangninh.gov.vn" target="_blank" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Sở Y tế Quảng Ninh</a></li>
+              <li><a href="https://moh.gov.vn" target="_blank" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Bộ Y tế Việt Nam</a></li>
             </ul>
           </div>
         </div>

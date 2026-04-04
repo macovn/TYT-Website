@@ -22,12 +22,24 @@ const navLinks = [
       { name: 'Cơ cấu tổ chức', path: '/gioi-thieu#co-cau' },
     ]
   },
-  { name: 'Tin tức', path: '/tin-tuc' },
-  { name: 'Thông báo', path: '/thong-bao' },
+  { 
+    name: 'Tin tức & Thông báo', 
+    path: '/tin-tuc',
+    dropdown: [
+      { name: 'Tin tức', path: '/tin-tuc' },
+      { name: 'Thông báo', path: '/thong-bao' },
+    ]
+  },
   { name: 'Sức khỏe', path: '/suc-khoe' },
   { name: 'Dịch vụ y tế', path: '/dich-vu' },
-  { name: 'Tài liệu', path: '/tai-lieu' },
-  { name: 'Thư viện', path: '/thu-vien' },
+  { 
+    name: 'Tài liệu & Thư viện', 
+    path: '/tai-lieu',
+    dropdown: [
+      { name: 'Tài liệu', path: '/tai-lieu' },
+      { name: 'Thư viện', path: '/thu-vien' },
+    ]
+  },
   { name: 'Hỏi đáp', path: '/hoi-dap' },
   { name: 'Liên hệ', path: '/lien-he' },
 ];
