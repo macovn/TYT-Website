@@ -4,6 +4,7 @@ import "@/app/globals.css";
 import TopBar from "@/components/TopBar";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { Analytics } from "@vercel/analytics/next";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["vietnamese"],
@@ -59,6 +60,7 @@ export default function RootLayout({
           <main>{children}</main>
           <Footer />
         </div>
+        <Analytics />
       </body>
     </html>
   );
