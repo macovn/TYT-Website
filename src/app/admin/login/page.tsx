@@ -20,6 +20,13 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
+    // Check if Supabase is configured
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')) {
+      setError("Hệ thống chưa được cấu hình Supabase. Vui lòng kiểm tra biến môi trường trên Vercel.");
+      setLoading(false);
+      return;
+    }
+
     // 1. LOGIN BẰNG SUPABASE
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -28,12 +35,15 @@ export default function LoginPage() {
 
     // 2. CHECK ERROR
     if (error) {
-      setError("Sai tài khoản hoặc mật khẩu");
+      console.error("Login Error:", error);
+      // If it's a specific Supabase error, show it, otherwise show generic message
+      setError(error.message === "Invalid login credentials" ? "Sai tài khoản hoặc mật khẩu" : `Lỗi đăng nhập: ${error.message}`);
       setLoading(false);
       return;
     }
 
     if (data.user) {
+      // ... existing success logic ...
       // QUICK FIX: Hardcode admin email bypass (vẫn giữ để đảm bảo admin chính luôn vào được)
       const ADMIN_EMAIL = "macovn@gmail.com";
       if (data.user.email === ADMIN_EMAIL) {
@@ -61,6 +71,28 @@ export default function LoginPage() {
     }
   };
 
+  const handleInitializeAdmin = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/create-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, role: 'admin' }),
+      });
+      const result = await response.json();
+      if (response.ok) {
+        setError("Đã khởi tạo Admin thành công! Vui lòng nhấn Đăng nhập lại.");
+      } else {
+        setError("Lỗi khởi tạo: " + result.error);
+      }
+    } catch (err: any) {
+      setError("Lỗi kết nối: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--primary-dark)] to-[var(--primary)] p-6">
       <div className="bg-white rounded-[32px] p-10 shadow-2xl max-w-md w-full">
@@ -75,6 +107,23 @@ export default function LoginPage() {
         {error && (
           <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-6 text-sm font-bold border border-red-100">
             {error}
+            {error.includes("cấu hình") && (
+              <div className="mt-2 text-[10px] font-normal opacity-80">
+                URL: {process.env.NEXT_PUBLIC_SUPABASE_URL || "Chưa có"}<br/>
+                Key: {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "Đã có" : "Chưa có"}
+              </div>
+            )}
+            {error === "Sai tài khoản hoặc mật khẩu" && email === "macovn@gmail.com" && (
+              <div className="mt-4 pt-4 border-t border-red-200">
+                <p className="text-[11px] font-normal mb-2">Nếu đây là lần đầu bạn sử dụng hệ thống này, hãy nhấn nút bên dưới để khởi tạo tài khoản Admin với email và mật khẩu bạn vừa nhập.</p>
+                <button 
+                  onClick={handleInitializeAdmin}
+                  className="w-full bg-red-600 text-white py-2 rounded-lg text-xs hover:bg-red-700 transition-all"
+                >
+                  Khởi tạo Admin
+                </button>
+              </div>
+            )}
           </div>
         )}
 
