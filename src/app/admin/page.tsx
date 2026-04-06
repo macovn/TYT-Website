@@ -1,35 +1,95 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Newspaper, Send, PlusCircle } from 'lucide-react';
+import dynamicImport from 'next/dynamic';
+
+const RichTextEditor = dynamicImport(() => import('@/components/Editor'), { ssr: false });
+import { Newspaper, Send, PlusCircle, Trash2, Edit, Eye } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminPage() {
+  const [posts, setPosts] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     content: '',
     status: 'published'
   });
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
   const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const fetchPosts = async () => {
+    setFetching(true);
+    console.log("Fetching posts...");
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error("Error fetching posts:", error);
+    } else {
+      console.log("Posts fetched:", data?.length);
+      setPosts(data || []);
+    }
+    setFetching(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage('');
 
+    try {
+      console.log("SUPABASE URL (Admin Page):", process.env.NEXT_PUBLIC_SUPABASE_URL);
+      console.log('START SUBMIT - Form Data:', formData);
+
+      const { data, error } = await supabase
+        .from('posts')
+        .insert([
+          {
+            title: formData.title,
+            content: formData.content,
+            status: formData.status
+          }
+        ])
+        .select();
+
+      console.log('RESULT:', { data, error });
+
+      setLoading(false);
+      if (!error) {
+        setMessage('Đã tạo bài viết thành công!');
+        setFormData({ title: '', content: '', status: 'published' });
+        fetchPosts(); // Reload list
+      } else {
+        console.error('Supabase Insert Error (posts):', error);
+        setMessage('Lỗi: ' + error.message);
+      }
+    } catch (err) {
+      console.error('CRASH DURING SUBMIT:', err);
+      setMessage('Lỗi runtime: ' + (err instanceof Error ? err.message : String(err)));
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Bạn có chắc chắn muốn xóa bài viết này?")) return;
+
     const { error } = await supabase
       .from('posts')
-      .insert([formData]);
+      .delete()
+      .eq('id', id);
 
-    setLoading(false);
-    if (!error) {
-      setMessage('Đã tạo bài viết thành công!');
-      setFormData({ title: '', content: '', status: 'published' });
+    if (error) {
+      alert("Lỗi khi xóa: " + error.message);
     } else {
-      console.error('Supabase Insert Error (posts):', error);
-      setMessage('Lỗi: ' + error.message + ' (Xem console để biết chi tiết)');
+      fetchPosts();
     }
   };
 
@@ -107,6 +167,7 @@ export default function AdminPage() {
     setLoading(false);
     if (!error) {
       setMessage('Đã thêm 10 bài viết ví dụ thành công!');
+      fetchPosts();
     } else {
       console.error('Supabase Seed Error (posts):', error);
       setMessage('Lỗi khi thêm dữ liệu: ' + error.message + ' (Xem console để biết chi tiết)');
@@ -115,71 +176,133 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-[var(--gray-50)] py-12">
-      <div className="container max-w-2xl">
-        <div className="bg-white rounded-3xl shadow-xl border border-[var(--gray-100)] overflow-hidden">
-          <div className="bg-[var(--primary)] p-8 text-white">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-3">
-                <PlusCircle className="w-8 h-8" />
-                <h1 className="text-2xl font-bold">Quản trị bài viết</h1>
+      <div className="container max-w-4xl">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Form Section */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-3xl shadow-xl border border-[var(--gray-100)] overflow-hidden sticky top-8 max-h-[calc(100vh-4rem)] overflow-y-auto">
+              <div className="bg-[var(--primary)] p-6 text-white">
+                <div className="flex items-center gap-3 mb-2">
+                  <PlusCircle className="w-6 h-6" />
+                  <h1 className="text-xl font-bold">Thêm bài viết</h1>
+                </div>
+                <p className="text-xs opacity-80">Tạo nội dung mới cho trang tin tức</p>
               </div>
-              <button 
-                onClick={handleSeedData}
-                disabled={loading}
-                className="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all flex items-center gap-2"
-              >
-                <PlusCircle className="w-4 h-4" /> Thêm 10 bài mẫu
-              </button>
+
+              <div className="p-6">
+                {message && (
+                  <div className={`p-4 rounded-xl mb-6 font-bold text-xs ${message.includes('Lỗi') ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
+                    {message}
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-[var(--gray-700)] uppercase tracking-wider">Tiêu đề</label>
+                    <input 
+                      type="text" 
+                      required
+                      value={formData.title}
+                      onChange={(e) => setFormData({...formData, title: e.target.value})}
+                      className="w-full bg-[var(--gray-50)] border border-[var(--gray-200)] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[var(--primary)] transition-all"
+                      placeholder="Nhập tiêu đề..." 
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-[var(--gray-700)] uppercase tracking-wider">Nội dung</label>
+                    <RichTextEditor 
+                      content={formData.content}
+                      onChange={(html) => setFormData({...formData, content: html})}
+                    />
+                  </div>
+
+                  <button 
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-[var(--primary)] text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 hover:bg-[var(--primary-dark)] transition-all disabled:opacity-50 shadow-lg text-sm"
+                  >
+                    {loading ? 'Đang xử lý...' : <><Send className="w-4 h-4" /> Đăng bài viết</>}
+                  </button>
+
+                  <button 
+                    type="button"
+                    onClick={handleSeedData}
+                    disabled={loading}
+                    className="w-full bg-gray-50 text-gray-500 font-bold py-3 rounded-xl border border-gray-200 text-xs hover:bg-gray-100 transition-all"
+                  >
+                    Thêm 10 bài mẫu
+                  </button>
+                </form>
+              </div>
             </div>
-            <p className="opacity-80">Tạo bài viết mới cho trang tin tức</p>
           </div>
 
-          <div className="p-8">
-            {message && (
-              <div className={`p-4 rounded-xl mb-6 font-bold text-sm ${message.includes('Lỗi') ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
-                {message}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-[var(--gray-700)]">Tiêu đề bài viết</label>
-                <input 
-                  type="text" 
-                  required
-                  value={formData.title}
-                  onChange={(e) => setFormData({...formData, title: e.target.value})}
-                  className="w-full bg-[var(--gray-50)] border border-[var(--gray-200)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--primary)] transition-all"
-                  placeholder="Nhập tiêu đề..." 
-                />
+          {/* List Section */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-3xl shadow-xl border border-[var(--gray-100)] overflow-hidden">
+              <div className="p-6 border-b border-[var(--gray-100)] flex items-center justify-between">
+                <h2 className="text-xl font-bold text-[var(--gray-800)] flex items-center gap-2">
+                  <Newspaper className="w-6 h-6 text-[var(--primary)]" /> Danh sách bài viết
+                </h2>
+                <span className="text-xs font-bold text-[var(--gray-400)] uppercase">{posts.length} bài viết</span>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-[var(--gray-700)]">Nội dung bài viết</label>
-                <textarea 
-                  required
-                  value={formData.content}
-                  onChange={(e) => setFormData({...formData, content: e.target.value})}
-                  className="w-full bg-[var(--gray-50)] border border-[var(--gray-200)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--primary)] transition-all min-h-[200px]"
-                  placeholder="Nhập nội dung bài viết..."
-                ></textarea>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead className="bg-[var(--gray-50)] text-[11px] uppercase tracking-wider font-bold text-[var(--gray-500)]">
+                    <tr>
+                      <th className="px-6 py-4">Bài viết</th>
+                      <th className="px-6 py-4">Ngày đăng</th>
+                      <th className="px-6 py-4 text-right">Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[var(--gray-100)]">
+                    {fetching ? (
+                      <tr>
+                        <td colSpan={3} className="px-6 py-12 text-center text-sm text-[var(--gray-400)]">Đang tải danh sách...</td>
+                      </tr>
+                    ) : posts.length === 0 ? (
+                      <tr>
+                        <td colSpan={3} className="px-6 py-12 text-center text-sm text-[var(--gray-400)]">Chưa có bài viết nào.</td>
+                      </tr>
+                    ) : (
+                      posts.map((post) => (
+                        <tr key={post.id} className="hover:bg-[var(--gray-50)] transition-colors group">
+                          <td className="px-6 py-4">
+                            <div className="font-bold text-[var(--gray-800)] text-sm line-clamp-1">{post.title}</div>
+                            <div className="text-[11px] text-[var(--gray-400)] mt-0.5 flex items-center gap-2">
+                              <Eye className="w-3 h-3" /> {post.views || 0} lượt xem
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-xs text-[var(--gray-500)]">
+                            {new Date(post.created_at).toLocaleDateString('vi-VN')}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><Edit className="w-4 h-4" /></button>
+                              <button 
+                                onClick={() => handleDelete(post.id)}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
+            </div>
 
-              <button 
-                type="submit"
-                disabled={loading}
-                className="w-full bg-[var(--primary)] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-[var(--primary-dark)] transition-all disabled:opacity-50 shadow-lg"
-              >
-                {loading ? 'Đang xử lý...' : <><Send className="w-5 h-5" /> Đăng bài viết</>}
-              </button>
-            </form>
-
-            <div className="mt-8 pt-8 border-t border-[var(--gray-100)] flex justify-between items-center">
-              <Link href="/tin-tuc" className="text-sm font-bold text-[var(--primary)] hover:underline flex items-center gap-1">
-                <Newspaper className="w-4 h-4" /> Xem trang tin tức
-              </Link>
-              <Link href="/" className="text-sm font-bold text-[var(--gray-500)] hover:underline">
+            <div className="mt-8 flex justify-between items-center px-4">
+              <Link href="/" className="text-sm font-bold text-[var(--gray-500)] hover:text-[var(--primary)] transition-colors">
                 Quay lại trang chủ
+              </Link>
+              <Link href="/tin-tuc" className="text-sm font-bold text-[var(--primary)] hover:underline">
+                Xem trang tin tức công khai
               </Link>
             </div>
           </div>

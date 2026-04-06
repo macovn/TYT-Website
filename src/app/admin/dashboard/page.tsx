@@ -16,6 +16,9 @@ import {
   Edit 
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import dynamicImport from 'next/dynamic';
+
+const RichTextEditor = dynamicImport(() => import('@/components/Editor'), { ssr: false });
 
 export const dynamic = 'force-dynamic';
 
@@ -25,6 +28,9 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [posts, setPosts] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
+  const [isAddingPost, setIsAddingPost] = useState(false);
+  const [newPost, setNewPost] = useState({ title: '', content: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -40,15 +46,88 @@ export default function AdminDashboard() {
   }, [router]);
 
   async function fetchData() {
-    const { data: postsData } = await supabase.from('posts').select('*, categories(*)').order('created_at', { ascending: false });
-    const { data: msgsData } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
-    if (postsData) setPosts(postsData);
-    if (msgsData) setMessages(msgsData);
+    console.log("Fetching data...");
+    let { data: postsData, error: postsError } = await supabase.from('posts').select('*, categories(*)').order('created_at', { ascending: false });
+    
+    // Fallback if categories relation fails
+    if (postsError) {
+      console.warn("Categories relation failed in dashboard, fetching posts only:", postsError.message);
+      const { data: fallbackData, error: fallbackError } = await supabase.from('posts').select('*').order('created_at', { ascending: false });
+      if (fallbackError) console.error("Fallback dashboard fetch failed:", fallbackError);
+      postsData = fallbackData;
+    }
+
+    const { data: msgsData, error: msgsError } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
+    
+    if (msgsError) console.error("Error fetching messages:", msgsError);
+
+    if (postsData) {
+      console.log("Posts fetched:", postsData.length);
+      setPosts(postsData);
+    }
+    if (msgsData) {
+      console.log("Messages fetched:", msgsData.length);
+      setMessages(msgsData);
+    }
   }
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push('/admin/login');
+  };
+
+  const handleCreatePost = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    try {
+      console.log("SUPABASE URL (Admin):", process.env.NEXT_PUBLIC_SUPABASE_URL);
+      console.log("START SUBMIT - Post Data:", newPost);
+
+      const { data, error } = await supabase
+        .from('posts')
+        .insert([
+          {
+            title: newPost.title,
+            content: newPost.content,
+            status: 'published'
+          }
+        ])
+        .select();
+
+      console.log("RESULT:", { data, error });
+
+      if (error) {
+        alert("Lỗi: " + error.message);
+        setIsSubmitting(false);
+        return;
+      }
+
+      alert("Đăng bài thành công!");
+      setNewPost({ title: '', content: '' });
+      setIsAddingPost(false);
+      setIsSubmitting(false);
+      fetchData(); // Reload list
+    } catch (err) {
+      console.error("CRASH DURING SUBMIT:", err);
+      alert("Lỗi runtime: " + (err instanceof Error ? err.message : String(err)));
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeletePost = async (id: string) => {
+    if (!confirm("Bạn có chắc chắn muốn xóa bài viết này?")) return;
+
+    const { error } = await supabase
+      .from('posts')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      alert("Lỗi khi xóa: " + error.message);
+    } else {
+      fetchData();
+    }
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">Đang kiểm tra quyền truy cập...</div>;
@@ -124,6 +203,50 @@ export default function AdminDashboard() {
         </header>
 
         <div className="p-8">
+          {isAddingPost && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-3xl p-8 max-w-2xl w-full shadow-2xl animate-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">Thêm bài viết mới</h2>
+                <form onSubmit={handleCreatePost} className="space-y-5">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-gray-700">Tiêu đề</label>
+                    <input 
+                      type="text" 
+                      required
+                      value={newPost.title}
+                      onChange={(e) => setNewPost({...newPost, title: e.target.value})}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--primary)] transition-all"
+                      placeholder="Nhập tiêu đề bài viết..." 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-gray-700">Nội dung</label>
+                    <RichTextEditor 
+                      content={newPost.content}
+                      onChange={(html) => setNewPost({...newPost, content: html})}
+                    />
+                  </div>
+                  <div className="flex gap-3 pt-4">
+                    <button 
+                      type="button"
+                      onClick={() => setIsAddingPost(false)}
+                      className="flex-1 bg-gray-100 text-gray-600 font-bold py-3 rounded-xl hover:bg-gray-200 transition-all"
+                    >
+                      Hủy bỏ
+                    </button>
+                    <button 
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="flex-[2] bg-[var(--primary)] text-white font-bold py-3 rounded-xl hover:bg-[var(--primary-dark)] transition-all disabled:opacity-50"
+                    >
+                      {isSubmitting ? 'Đang đăng...' : 'Đăng bài viết'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
           {activeTab === 'dashboard' && (
             <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -146,7 +269,10 @@ export default function AdminDashboard() {
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="p-6 border-b border-gray-100 flex items-center justify-between">
                   <h3 className="font-bold text-gray-800">Bài viết gần đây</h3>
-                  <button className="bg-[var(--primary)] text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
+                  <button 
+                    onClick={() => setIsAddingPost(true)}
+                    className="bg-[var(--primary)] text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2"
+                  >
                     <Plus className="w-4 h-4" /> Thêm mới
                   </button>
                 </div>
@@ -176,7 +302,12 @@ export default function AdminDashboard() {
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
                             <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><Edit className="w-4 h-4" /></button>
-                            <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
+                            <button 
+                              onClick={() => handleDeletePost(post.id)}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -191,7 +322,10 @@ export default function AdminDashboard() {
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="p-6 border-b border-gray-100 flex items-center justify-between">
                 <h3 className="font-bold text-gray-800">Tất cả bài viết</h3>
-                <button className="bg-[var(--primary)] text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
+                <button 
+                  onClick={() => setIsAddingPost(true)}
+                  className="bg-[var(--primary)] text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2"
+                >
                   <Plus className="w-4 h-4" /> Thêm mới
                 </button>
               </div>
@@ -221,7 +355,12 @@ export default function AdminDashboard() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><Edit className="w-4 h-4" /></button>
-                          <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
+                          <button 
+                            onClick={() => handleDeletePost(post.id)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </td>
                     </tr>

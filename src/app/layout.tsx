@@ -29,6 +29,29 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (typeof window !== 'undefined') {
+                try {
+                  // Prevent wallet extensions from interfering with the app
+                  // by attempting to delete or proxy the ethereum object if it's causing issues.
+                  // This is a common workaround for "Cannot redefine property: ethereum" errors.
+                  if (window.ethereum) {
+                    const originalEthereum = window.ethereum;
+                    try {
+                      delete window.ethereum;
+                    } catch (e) {
+                      console.warn("Could not delete window.ethereum, attempting to proxy.");
+                    }
+                  }
+                } catch (e) {}
+              }
+            `,
+          }}
+        />
+      </head>
       <body className={`${beVietnamPro.variable} ${playfairDisplay.variable} font-sans`}>
         <div className="app">
           <TopBar />

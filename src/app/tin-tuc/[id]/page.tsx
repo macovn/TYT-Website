@@ -17,11 +17,25 @@ export default function NewsDetailPage() {
 
   useEffect(() => {
     async function fetchData() {
-      const { data: postData } = await supabase
+      console.log("Fetching post detail for ID:", id);
+      let { data: postData, error: postError } = await supabase
         .from('posts')
         .select('*, categories(*)')
         .eq('id', id)
         .single();
+      
+      // Fallback if categories relation fails
+      if (postError) {
+        console.warn("Categories relation failed in detail, fetching post only:", postError.message);
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('posts')
+          .select('*')
+          .eq('id', id)
+          .single();
+        
+        if (fallbackError) console.error("Fallback detail fetch failed:", fallbackError);
+        postData = fallbackData;
+      }
       
       if (postData) {
         setPost(postData);
@@ -31,7 +45,6 @@ export default function NewsDetailPage() {
         const { data: relatedData } = await supabase
           .from('posts')
           .select('*')
-          .eq('category_id', postData.category_id)
           .neq('id', id)
           .limit(3);
         
@@ -78,11 +91,10 @@ export default function NewsDetailPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             <div className="lg:col-span-2">
               <div className="bg-white rounded-[var(--radius-lg)] p-8 shadow-[var(--shadow)] border border-[var(--gray-100)]">
-                <div className="prose prose-lg max-w-none text-[var(--gray-700)] leading-relaxed">
-                  {post.content.split('\n').map((p: string, i: number) => (
-                    <p key={i} className="mb-4">{p}</p>
-                  ))}
-                </div>
+                <div 
+                  className="prose prose-lg max-w-none text-[var(--gray-700)] leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: post.content }}
+                />
 
                 <div className="mt-12 pt-8 border-t border-[var(--gray-100)] flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div className="flex items-center gap-4">

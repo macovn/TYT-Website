@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Newspaper, Calendar, Eye, ChevronRight, Phone } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { stripHtml } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,18 +14,33 @@ export default function NewsPage() {
 
   useEffect(() => {
     async function fetchData() {
-      const { data: postsData } = await supabase
+      console.log("Fetching posts...");
+      let { data: postsData, error: postsError } = await supabase
         .from('posts')
         .select('*, categories(*)')
         .eq('status', 'published')
         .order('created_at', { ascending: false });
       
-      const { data: catsData } = await supabase
+      // Fallback if categories relation fails
+      if (postsError) {
+        console.warn("Categories relation failed, fetching posts only:", postsError.message);
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('posts')
+          .select('*')
+          .eq('status', 'published')
+          .order('created_at', { ascending: false });
+        
+        if (fallbackError) console.error("Fallback fetch failed:", fallbackError);
+        postsData = fallbackData;
+      }
+      
+      const { data: catsData, error: catsError } = await supabase
         .from('categories')
         .select('*');
 
       if (postsData) setPosts(postsData);
       if (catsData) setCategories(catsData);
+      if (catsError) console.warn("Categories fetch failed (table might not exist):", catsError.message);
     }
     fetchData();
   }, []);
@@ -69,7 +85,7 @@ export default function NewsPage() {
                         {post.title}
                       </h3>
                       <p className="text-[14px] text-[var(--gray-500)] leading-relaxed line-clamp-3">
-                        {post.excerpt || post.content?.substring(0, 150)}
+                        {post.excerpt || stripHtml(post.content || "").substring(0, 150)}
                       </p>
                     </div>
                   </Link>
