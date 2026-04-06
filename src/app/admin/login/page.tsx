@@ -20,7 +20,7 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data: { user }, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -28,8 +28,29 @@ export default function LoginPage() {
     if (error) {
       setError('Tên đăng nhập hoặc mật khẩu không đúng!');
       setLoading(false);
-    } else {
-      router.push('/admin/dashboard');
+    } else if (user) {
+      // QUICK FIX: Hardcode admin email bypass
+      const ADMIN_EMAIL = "macovn@gmail.com";
+      
+      if (user.email === ADMIN_EMAIL) {
+        router.push('/admin/dashboard');
+        return;
+      }
+
+      // Standard role check from database
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      
+      if (profile && (profile.role === 'admin' || profile.role === 'editor')) {
+        router.push('/admin/dashboard');
+      } else {
+        await supabase.auth.signOut();
+        setError('Bạn không có quyền truy cập trang quản trị!');
+        setLoading(false);
+      }
     }
   };
 

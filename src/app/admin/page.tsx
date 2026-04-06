@@ -10,6 +10,8 @@ import Link from 'next/link';
 
 export default function AdminPage() {
   const [posts, setPosts] = useState<any[]>([]);
+  const [role, setRole] = useState<string | null>(null);
+  const [session, setSession] = useState<any>(null);
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -18,10 +20,42 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [message, setMessage] = useState('');
+  const router = useRouter();
 
   useEffect(() => {
-    fetchPosts();
-  }, []);
+    async function checkAuth() {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        router.push('/admin/login');
+        return;
+      }
+
+      setSession(session);
+
+      const ADMIN_EMAIL = "macovn@gmail.com";
+      if (session.user.email === ADMIN_EMAIL) {
+        setRole('admin');
+        fetchPosts();
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .single();
+      
+      if (profile && (profile.role === 'admin' || profile.role === 'editor')) {
+        setRole(profile.role);
+        fetchPosts();
+      } else {
+        router.push('/');
+      }
+    }
+
+    checkAuth();
+  }, [router]);
 
   const fetchPosts = async () => {
     setFetching(true);

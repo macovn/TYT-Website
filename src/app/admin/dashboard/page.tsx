@@ -24,50 +24,90 @@ export const dynamic = 'force-dynamic';
 
 export default function AdminDashboard() {
   const [session, setSession] = useState<any>(null);
+  const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [posts, setPosts] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [isAddingPost, setIsAddingPost] = useState(false);
+  const [isAddingUser, setIsAddingUser] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<any>(null);
   const [newPost, setNewPost] = useState({ title: '', content: '' });
+  const [newUser, setNewUser] = useState({ email: '', password: '', role: 'editor' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
+    async function fetchProfile(user: any) {
+      const ADMIN_EMAIL = "macovn@gmail.com";
+      
+      // Bypass for hardcoded admin
+      if (user.email === ADMIN_EMAIL) {
+        setRole('admin');
+        setLoading(false);
+        return;
+      }
+
+      const { data } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      
+      if (data) {
+        setRole(data.role);
+        if (data.role !== 'admin' && data.role !== 'editor') {
+          router.push('/');
+        }
+      } else {
+        // If profile not found and not hardcoded admin, block access
+        router.push('/');
+      }
+      setLoading(false);
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
         router.push('/admin/login');
       } else {
         setSession(session);
+        fetchProfile(session.user);
         fetchData();
       }
-      setLoading(false);
     });
   }, [router]);
 
   async function fetchData() {
     console.log("Fetching data...");
-    let { data: postsData, error: postsError } = await supabase.from('posts').select('*, categories(*)').order('created_at', { ascending: false });
     
-    // Fallback if categories relation fails
-    if (postsError) {
-      console.warn("Categories relation failed in dashboard, fetching posts only:", postsError.message);
-      const { data: fallbackData, error: fallbackError } = await supabase.from('posts').select('*').order('created_at', { ascending: false });
-      if (fallbackError) console.error("Fallback dashboard fetch failed:", fallbackError);
-      postsData = fallbackData;
-    }
-
-    const { data: msgsData, error: msgsError } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
-    
-    if (msgsError) console.error("Error fetching messages:", msgsError);
-
-    if (postsData) {
-      console.log("Posts fetched:", postsData.length);
-      setPosts(postsData);
-    }
-    if (msgsData) {
-      console.log("Messages fetched:", msgsData.length);
-      setMessages(msgsData);
+    try {
+      // Fetch Posts
+      const { data: postsData, error: postsError } = await supabase.from('posts').select('*, categories(*)').order('created_at', { ascending: false });
+      if (postsError) console.error("Error fetching posts:", postsError);
+      if (postsData) setPosts(postsData);
+      
+      // Fetch Messages
+      const { data: msgsData, error: msgsError } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
+      if (msgsError) console.error("Error fetching messages:", msgsError);
+      if (msgsData) setMessages(msgsData);
+      
+      // Fetch Users (Admin only)
+      console.log("Attempting to fetch users from profiles table...");
+      const { data: usersData, error: usersError } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+      
+      if (usersError) {
+        console.error("CRITICAL: Error fetching users from profiles:", usersError);
+      } else {
+        console.log("SUCCESS: Users fetched from profiles:", usersData);
+        if (usersData) setUsers(usersData);
+        
+        // Check if current user profile exists
+        const { data: myProfile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+        console.log("DEBUG: My current profile in DB:", myProfile);
+      }
+    } catch (err) {
+      console.error("Exception in fetchData:", err);
     }
   }
 
@@ -130,8 +170,93 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    try {
+      // Call the new API route
+      const response = await fetch('/api/create-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: newUser.email,
+          password: newUser.password,
+          role: newUser.role
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Lỗi khi tạo người dùng');
+      }
+
+      alert("Tạo người dùng thành công!");
+      setNewUser({ email: '', password: '', role: 'editor' });
+      setIsAddingUser(false);
+      fetchData();
+    } catch (err: any) {
+      alert("Lỗi: " + err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUpdateRole = async (userId: string, newRole: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('id', userId);
+
+      if (error) throw error;
+      alert("Cập nhật vai trò thành công!");
+      fetchData();
+    } catch (err: any) {
+      alert("Lỗi: " + err.message);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+    const { id: userId, email: userEmail } = userToDelete;
+
+    if (userId === session.user.id) {
+      alert("Bạn không thể tự xóa chính mình!");
+      setUserToDelete(null);
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/delete-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Lỗi khi xóa người dùng');
+      }
+
+      setUserToDelete(null);
+      fetchData();
+    } catch (err: any) {
+      alert("Lỗi: " + err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (loading) return <div className="min-h-screen flex items-center justify-center">Đang kiểm tra quyền truy cập...</div>;
-  if (!session) return null;
+  if (!session || !role) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -149,13 +274,13 @@ export default function AdminDashboard() {
 
         <nav className="flex-1 p-4 space-y-1">
           {[
-            { id: 'dashboard', icon: <LayoutDashboard className="w-4 h-4" />, label: 'Tổng quan' },
-            { id: 'posts', icon: <Newspaper className="w-4 h-4" />, label: 'Bài viết' },
-            { id: 'announcements', icon: <Megaphone className="w-4 h-4" />, label: 'Thông báo' },
-            { id: 'documents', icon: <FileText className="w-4 h-4" />, label: 'Tài liệu' },
-            { id: 'messages', icon: <MessageSquare className="w-4 h-4" />, label: 'Tin nhắn', count: messages.filter(m => !m.is_read).length },
-            { id: 'settings', icon: <Settings className="w-4 h-4" />, label: 'Cài đặt' },
-          ].map((item) => (
+            { id: 'dashboard', icon: <LayoutDashboard className="w-4 h-4" />, label: 'Tổng quan', roles: ['admin', 'editor'] },
+            { id: 'posts', icon: <Newspaper className="w-4 h-4" />, label: 'Bài viết', roles: ['admin', 'editor'] },
+            { id: 'announcements', icon: <Megaphone className="w-4 h-4" />, label: 'Thông báo', roles: ['admin'] },
+            { id: 'documents', icon: <FileText className="w-4 h-4" />, label: 'Tài liệu', roles: ['admin'] },
+            { id: 'messages', icon: <MessageSquare className="w-4 h-4" />, label: 'Tin nhắn', roles: ['admin'], count: messages.filter(m => !m.is_read).length },
+            { id: 'users', icon: <Settings className="w-4 h-4" />, label: 'Quản lý User', roles: ['admin'] },
+          ].filter(item => item.roles.includes(role as string)).map((item) => (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
@@ -370,6 +495,22 @@ export default function AdminDashboard() {
             </div>
           )}
 
+          {activeTab === 'announcements' && role === 'admin' && (
+            <div className="bg-white p-12 rounded-2xl shadow-sm border border-gray-100 text-center">
+              <Megaphone className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-bold text-gray-800">Quản lý thông báo</h3>
+              <p className="text-gray-500">Tính năng đang được phát triển.</p>
+            </div>
+          )}
+
+          {activeTab === 'documents' && role === 'admin' && (
+            <div className="bg-white p-12 rounded-2xl shadow-sm border border-gray-100 text-center">
+              <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-bold text-gray-800">Quản lý tài liệu</h3>
+              <p className="text-gray-500">Tính năng đang được phát triển.</p>
+            </div>
+          )}
+
           {activeTab === 'messages' && (
             <div className="space-y-4">
               {messages.map((msg) => (
@@ -395,7 +536,168 @@ export default function AdminDashboard() {
               ))}
             </div>
           )}
+
+          {activeTab === 'users' && role === 'admin' && (
+            <div className="space-y-8">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                  <h3 className="font-bold text-gray-800">Quản lý người dùng</h3>
+                  <button 
+                    onClick={() => setIsAddingUser(true)}
+                    className="bg-[var(--primary)] text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" /> Thêm User
+                  </button>
+                </div>
+                <table className="w-full text-left">
+                  <thead className="bg-gray-50 text-[11px] uppercase tracking-wider font-bold text-gray-500">
+                    <tr>
+                      <th className="px-6 py-4">Email</th>
+                      <th className="px-6 py-4">Vai trò</th>
+                      <th className="px-6 py-4">Ngày tạo</th>
+                      <th className="px-6 py-4">Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {users.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-12 text-center text-sm text-gray-400">Chưa có người dùng nào hoặc bạn không có quyền xem danh sách.</td>
+                      </tr>
+                    ) : (
+                      users.map((u) => (
+                        <tr key={u.id} className="text-sm">
+                          <td className="px-6 py-4 font-medium">{u.email}</td>
+                          <td className="px-6 py-4">
+                            <select 
+                              value={u.role}
+                              onChange={(e) => handleUpdateRole(u.id, e.target.value)}
+                              className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase focus:outline-none border border-transparent hover:border-gray-200 transition-all ${
+                                u.role === 'admin' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'
+                              }`}
+                            >
+                              <option value="admin">Admin</option>
+                              <option value="editor">Editor</option>
+                              <option value="viewer">Viewer</option>
+                            </select>
+                          </td>
+                          <td className="px-6 py-4 text-gray-500">
+                            {u.created_at ? new Date(u.created_at).toLocaleDateString('vi-VN') : 'N/A'}
+                          </td>
+                          <td className="px-6 py-4">
+                            <button 
+                              onClick={() => setUserToDelete({ id: u.id, email: u.email })}
+                              disabled={u.id === session.user.id}
+                              className={`p-2 rounded-lg transition-colors ${
+                                u.id === session.user.id 
+                                  ? 'text-gray-300 cursor-not-allowed' 
+                                  : 'text-red-600 hover:bg-red-50'
+                              }`}
+                              title={u.id === session.user.id ? "Không thể xóa chính mình" : "Xóa người dùng"}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* User Modal */}
+        {isAddingUser && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-6 z-50">
+            <div className="bg-white rounded-[32px] w-full max-w-md overflow-hidden shadow-2xl">
+              <div className="bg-[var(--primary)] p-6 text-white">
+                <h3 className="text-xl font-bold">Thêm người dùng mới</h3>
+              </div>
+              <form onSubmit={handleCreateUser} className="p-8 space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-500 uppercase">Email</label>
+                  <input 
+                    type="email" 
+                    required
+                    value={newUser.email}
+                    onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[var(--primary)]"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-500 uppercase">Mật khẩu</label>
+                  <input 
+                    type="password" 
+                    required
+                    value={newUser.password}
+                    onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[var(--primary)]"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-500 uppercase">Vai trò</label>
+                  <select 
+                    value={newUser.role}
+                    onChange={(e) => setNewUser({...newUser, role: e.target.value})}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[var(--primary)]"
+                  >
+                    <option value="editor">Editor</option>
+                    <option value="admin">Admin</option>
+                    <option value="viewer">Viewer</option>
+                  </select>
+                </div>
+                <div className="flex gap-3 pt-4">
+                  <button 
+                    type="button"
+                    onClick={() => setIsAddingUser(false)}
+                    className="flex-1 py-3 text-sm font-bold text-gray-500 hover:bg-gray-50 rounded-xl transition-all"
+                  >
+                    Hủy
+                  </button>
+                  <button 
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex-1 bg-[var(--primary)] text-white py-3 rounded-xl text-sm font-bold hover:bg-[var(--primary-dark)] transition-all disabled:opacity-50"
+                  >
+                    {isSubmitting ? 'Đang tạo...' : 'Tạo User'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+        {/* Delete Confirmation Modal */}
+        {userToDelete && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-6 z-[60]">
+            <div className="bg-white rounded-[32px] w-full max-w-md overflow-hidden shadow-2xl">
+              <div className="bg-red-600 p-6 text-white">
+                <h3 className="text-xl font-bold">Xác nhận xóa</h3>
+              </div>
+              <div className="p-8 space-y-6">
+                <p className="text-gray-600">
+                  Bạn có chắc chắn muốn xóa người dùng <span className="font-bold text-gray-900">{userToDelete.email}</span>? 
+                  Hành động này không thể hoàn tác.
+                </p>
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => setUserToDelete(null)}
+                    className="flex-1 px-6 py-3 rounded-2xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors"
+                  >
+                    Hủy
+                  </button>
+                  <button 
+                    onClick={handleDeleteUser}
+                    disabled={isSubmitting}
+                    className="flex-1 px-6 py-3 rounded-2xl bg-red-600 text-white text-sm font-bold hover:bg-red-700 transition-all shadow-lg shadow-red-200 disabled:opacity-50"
+                  >
+                    {isSubmitting ? 'Đang xóa...' : 'Xác nhận xóa'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
