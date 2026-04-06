@@ -12,37 +12,33 @@ export default function NewsPage() {
   const [posts, setPosts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
 
+  const fetchPosts = async () => {
+    console.log("Fetching posts...");
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    console.log("POSTS:", data, error);
+
+    if (!error) {
+      setPosts(data || []);
+    } else {
+      console.error("Error fetching posts:", error);
+    }
+  };
+
   useEffect(() => {
-    async function fetchData() {
-      console.log("Fetching posts...");
-      let { data: postsData, error: postsError } = await supabase
-        .from('posts')
-        .select('*, categories(*)')
-        .eq('status', 'published')
-        .order('created_at', { ascending: false });
-      
-      // Fallback if categories relation fails
-      if (postsError) {
-        console.warn("Categories relation failed, fetching posts only:", postsError.message);
-        const { data: fallbackData, error: fallbackError } = await supabase
-          .from('posts')
-          .select('*')
-          .eq('status', 'published')
-          .order('created_at', { ascending: false });
-        
-        if (fallbackError) console.error("Fallback fetch failed:", fallbackError);
-        postsData = fallbackData;
-      }
-      
+    fetchPosts();
+    
+    async function fetchCategories() {
       const { data: catsData, error: catsError } = await supabase
         .from('categories')
         .select('*');
-
-      if (postsData) setPosts(postsData);
       if (catsData) setCategories(catsData);
-      if (catsError) console.warn("Categories fetch failed (table might not exist):", catsError.message);
+      if (catsError) console.warn("Categories fetch failed:", catsError.message);
     }
-    fetchData();
+    fetchCategories();
   }, []);
 
   return (

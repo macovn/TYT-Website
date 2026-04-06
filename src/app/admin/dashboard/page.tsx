@@ -84,6 +84,7 @@ export default function AdminDashboard() {
     try {
       // Fetch Posts
       const { data: postsData, error: postsError } = await supabase.from('posts').select('*, categories(*)').order('created_at', { ascending: false });
+      console.log("POSTS:", postsData, postsError);
       if (postsError) console.error("Error fetching posts:", postsError);
       if (postsData) setPosts(postsData);
       

@@ -20,37 +20,44 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    const { data: { user }, error } = await supabase.auth.signInWithPassword({
+    // 1. LOGIN BẰNG SUPABASE
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
+    // 2. CHECK ERROR
     if (error) {
-      setError('Tên đăng nhập hoặc mật khẩu không đúng!');
+      setError("Sai tài khoản hoặc mật khẩu");
       setLoading(false);
-    } else if (user) {
-      // QUICK FIX: Hardcode admin email bypass
+      return;
+    }
+
+    if (data.user) {
+      // QUICK FIX: Hardcode admin email bypass (vẫn giữ để đảm bảo admin chính luôn vào được)
       const ADMIN_EMAIL = "macovn@gmail.com";
-      
-      if (user.email === ADMIN_EMAIL) {
+      if (data.user.email === ADMIN_EMAIL) {
         router.push('/admin/dashboard');
         return;
       }
 
-      // Standard role check from database
+      // 3. LẤY ROLE
       const { data: profile } = await supabase
         .from('profiles')
         .select('role')
-        .eq('id', user.id)
+        .eq('id', data.user.id)
         .single();
       
-      if (profile && (profile.role === 'admin' || profile.role === 'editor')) {
-        router.push('/admin/dashboard');
-      } else {
+      // 4. CHECK ROLE
+      if (!profile || profile.role === 'viewer') {
         await supabase.auth.signOut();
-        setError('Bạn không có quyền truy cập trang quản trị!');
+        setError("Không có quyền truy cập");
         setLoading(false);
+        return;
       }
+
+      // 5. CHO VÀO ADMIN
+      router.push('/admin/dashboard');
     }
   };
 
