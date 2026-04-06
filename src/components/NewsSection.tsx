@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Newspaper, ArrowRight, Calendar, Syringe, Apple, Heart } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { stripHtml } from '@/lib/utils';
 
 export default function NewsSection() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -57,7 +58,7 @@ export default function NewsSection() {
                   {featuredPost.title}
                 </h3>
                 <p className="text-[13.5px] text-[var(--gray-500)] leading-relaxed line-clamp-3">
-                  {featuredPost.excerpt || featuredPost.content?.substring(0, 150)}
+                  {featuredPost.excerpt || stripHtml(featuredPost.content || "").substring(0, 150)}
                 </p>
               </div>
             </div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Megaphone, Calendar, ChevronRight, Info } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { stripHtml } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,7 +58,7 @@ export default function AnnouncementsPage() {
                         {ann.title}
                       </h3>
                       <p className="text-[14px] text-[var(--gray-600)] leading-relaxed">
-                        {ann.content}
+                        {stripHtml(ann.content || "")}
                       </p>
                     </div>
                   </div>
