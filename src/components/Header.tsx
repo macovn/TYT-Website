@@ -15,11 +15,11 @@ const navLinks = [
   { name: 'Trang chủ', path: '/' },
   { 
     name: 'Giới thiệu', 
-    path: '/gioi-thieu',
+    path: '/gioi-thieu/gioi-thieu-tram',
     dropdown: [
-      { name: 'Giới thiệu trạm', path: '/gioi-thieu' },
-      { name: 'Chức năng nhiệm vụ', path: '/gioi-thieu#chuc-nang' },
-      { name: 'Cơ cấu tổ chức', path: '/gioi-thieu#co-cau' },
+      { name: 'Giới thiệu trạm', path: '/gioi-thieu/gioi-thieu-tram' },
+      { name: 'Chức năng nhiệm vụ', path: '/gioi-thieu/chuc-nang-nhiem-vu' },
+      { name: 'Cơ cấu tổ chức', path: '/gioi-thieu/co-cau-to-chuc' },
     ]
   },
   { 
@@ -31,7 +31,7 @@ const navLinks = [
     ]
   },
   { name: 'Sức khỏe', path: '/suc-khoe' },
-  { name: 'Dịch vụ y tế', path: '/dich-vu' },
+  { name: 'Dịch vụ y tế', path: '/dich-vu-y-te' },
   { 
     name: 'Tài liệu & Thư viện', 
     path: '/tai-lieu',

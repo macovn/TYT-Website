@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { 
   LayoutDashboard, 
   Newspaper, 
@@ -13,7 +14,9 @@ import {
   Plus, 
   Eye, 
   Trash2, 
-  Edit 
+  Edit,
+  Stethoscope,
+  Image as ImageIcon
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import dynamicImport from 'next/dynamic';
@@ -33,7 +36,7 @@ export default function AdminDashboard() {
   const [isAddingPost, setIsAddingPost] = useState(false);
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [userToDelete, setUserToDelete] = useState<any>(null);
-  const [newPost, setNewPost] = useState({ title: '', content: '' });
+  const [newPost, setNewPost] = useState({ title: '', content: '', category: 'news' });
   const [newUser, setNewUser] = useState({ email: '', password: '', role: 'editor' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
@@ -131,6 +134,7 @@ export default function AdminDashboard() {
           {
             title: newPost.title,
             content: newPost.content,
+            category: newPost.category,
             status: 'published'
           }
         ])
@@ -145,7 +149,7 @@ export default function AdminDashboard() {
       }
 
       alert("Đăng bài thành công!");
-      setNewPost({ title: '', content: '' });
+      setNewPost({ title: '', content: '', category: 'news' });
       setIsAddingPost(false);
       setIsSubmitting(false);
       fetchData(); // Reload list
@@ -297,6 +301,34 @@ export default function AdminDashboard() {
               ) : null}
             </button>
           ))}
+          
+          <Link 
+            href="/admin/pages"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold text-white/60 hover:bg-white/5 hover:text-white transition-colors"
+          >
+            <FileText className="w-4 h-4" /> Quản lý trang
+          </Link>
+
+          <Link 
+            href="/admin/services"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold text-white/60 hover:bg-white/5 hover:text-white transition-colors"
+          >
+            <Stethoscope className="w-4 h-4" /> Quản lý dịch vụ
+          </Link>
+
+          <Link 
+            href="/admin/documents"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold text-white/60 hover:bg-white/5 hover:text-white transition-colors"
+          >
+            <FileText className="w-4 h-4" /> Quản lý tài liệu
+          </Link>
+
+          <Link 
+            href="/admin/media"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold text-white/60 hover:bg-white/5 hover:text-white transition-colors"
+          >
+            <ImageIcon className="w-4 h-4" /> Thư viện Media
+          </Link>
         </nav>
 
         <div className="p-4 border-t border-white/10">
@@ -344,6 +376,17 @@ export default function AdminDashboard() {
                       className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--primary)] transition-all"
                       placeholder="Nhập tiêu đề bài viết..." 
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-gray-700">Phân loại</label>
+                    <select 
+                      value={newPost.category}
+                      onChange={(e) => setNewPost({...newPost, category: e.target.value})}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--primary)] transition-all"
+                    >
+                      <option value="news">Tin tức</option>
+                      <option value="announcement">Thông báo</option>
+                    </select>
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-bold text-gray-700">Nội dung</label>
@@ -416,7 +459,9 @@ export default function AdminDashboard() {
                     {posts.slice(0, 5).map((post) => (
                       <tr key={post.id} className="text-sm hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4 font-bold text-gray-800">{post.title}</td>
-                        <td className="px-6 py-4 text-gray-500">{post.categories?.name}</td>
+                        <td className="px-6 py-4 text-gray-500">
+                          {post.category === 'news' ? 'Tin tức' : 'Thông báo'}
+                        </td>
                         <td className="px-6 py-4">
                           <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
                             post.status === 'published' ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'

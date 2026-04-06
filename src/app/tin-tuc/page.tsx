@@ -17,6 +17,7 @@ export default function NewsPage() {
     const { data, error } = await supabase
       .from('posts')
       .select('*')
+      .eq('category', 'news')
       .order('created_at', { ascending: false });
 
     console.log("POSTS:", data, error);

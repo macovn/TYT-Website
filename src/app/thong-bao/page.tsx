@@ -14,8 +14,9 @@ export default function AnnouncementsPage() {
   useEffect(() => {
     async function fetchAnnouncements() {
       const { data } = await supabase
-        .from('announcements')
+        .from('posts')
         .select('*')
+        .eq('category', 'announcement')
         .order('created_at', { ascending: false });
       
       if (data) setAnnouncements(data);

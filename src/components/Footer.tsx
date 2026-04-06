@@ -53,7 +53,7 @@ export default function Footer() {
           <div>
             <h4 className="text-sm font-bold text-white mb-4 pb-2.5 border-b-2 border-[var(--primary)] inline-block">Dịch vụ & Tài liệu</h4>
             <ul className="text-[13px] space-y-2">
-              <li><Link href="/dich-vu" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Dịch vụ y tế</Link></li>
+              <li><Link href="/dich-vu-y-te" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Dịch vụ y tế</Link></li>
               <li><Link href="/tai-lieu" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Tài liệu y tế</Link></li>
               <li><Link href="/thu-vien" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Thư viện ảnh</Link></li>
               <li><Link href="/hoi-dap" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Hỏi đáp</Link></li>
@@ -63,7 +63,7 @@ export default function Footer() {
           <div>
             <h4 className="text-sm font-bold text-white mb-4 pb-2.5 border-b-2 border-[var(--primary)] inline-block">Thông tin khác</h4>
             <ul className="text-[13px] space-y-2">
-              <li><Link href="/gioi-thieu" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Giới thiệu trạm</Link></li>
+              <li><Link href="/gioi-thieu/gioi-thieu-tram" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Giới thiệu trạm</Link></li>
               <li><Link href="/lien-he" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Liên hệ</Link></li>
               <li><a href="https://syt.quangninh.gov.vn" target="_blank" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Sở Y tế Quảng Ninh</a></li>
               <li><a href="https://moh.gov.vn" target="_blank" className="hover:text-[var(--accent)] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Bộ Y tế Việt Nam</a></li>
@@ -75,7 +75,7 @@ export default function Footer() {
         <div className="container">
           <div className="flex flex-wrap justify-between items-center gap-2 text-[12.5px] py-4">
             <span>© 2026 Trạm Y tế Cái Bầu – Đặc khu Vân Đồn – Tỉnh Quảng Ninh</span>
-            <span>Thiết kế bởi <a href="#" className="text-[var(--accent)]">Hệ thống Y tế Quảng Ninh</a></span>
+            <span>Thiết kế bởi: <span className="text-[var(--accent)]">Trương Thái Nguyên</span></span>
           </div>
         </div>
       </div>

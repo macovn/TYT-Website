@@ -15,12 +15,12 @@ export default function Home() {
       <div className="quick-access">
         <div className="container">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-            <Link href="/dich-vu" className="quick-item">
+            <Link href="/dich-vu-y-te" className="quick-item">
               <Stethoscope className="w-8 h-8 mx-auto mb-3 text-[var(--accent)]" />
               <h3 className="text-sm font-bold mb-1">Khám bệnh</h3>
               <p className="text-[12px] opacity-75">T2–T6: 7:00–17:00</p>
             </Link>
-            <Link href="/dich-vu" className="quick-item">
+            <Link href="/dich-vu-y-te" className="quick-item">
               <Syringe className="w-8 h-8 mx-auto mb-3 text-[var(--accent)]" />
               <h3 className="text-sm font-bold mb-1">Tiêm chủng</h3>
               <p className="text-[12px] opacity-75">Thứ 4 hàng tuần</p>

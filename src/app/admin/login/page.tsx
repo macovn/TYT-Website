@@ -36,8 +36,15 @@ export default function LoginPage() {
     // 2. CHECK ERROR
     if (error) {
       console.error("Login Error:", error);
-      // If it's a specific Supabase error, show it, otherwise show generic message
-      setError(error.message === "Invalid login credentials" ? "Sai tài khoản hoặc mật khẩu" : `Lỗi đăng nhập: ${error.message}`);
+      
+      if (error.message.includes("API key")) {
+        setError("Lỗi: API Key không hợp lệ. Vui lòng kiểm tra lại NEXT_PUBLIC_SUPABASE_ANON_KEY trên Vercel.");
+      } else if (error.message === "Invalid login credentials") {
+        setError("Sai tài khoản hoặc mật khẩu");
+      } else {
+        setError(`Lỗi đăng nhập: ${error.message}`);
+      }
+      
       setLoading(false);
       return;
     }

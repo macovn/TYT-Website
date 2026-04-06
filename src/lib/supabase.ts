@@ -1,10 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 if (typeof window !== 'undefined') {
-  console.log("SUPABASE URL:", supabaseUrl);
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error("CRITICAL: Supabase environment variables are missing!");
+    console.log("NEXT_PUBLIC_SUPABASE_URL:", supabaseUrl ? "Present" : "MISSING");
+    console.log("NEXT_PUBLIC_SUPABASE_ANON_KEY:", supabaseAnonKey ? "Present" : "MISSING");
+  } else {
+    console.log("Supabase initialized with URL:", supabaseUrl);
+  }
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Use placeholders only if keys are missing to avoid crash, but log error
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder-key'
+);

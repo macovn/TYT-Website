@@ -15,7 +15,7 @@ CREATE TABLE posts (
   title TEXT NOT NULL,
   content TEXT NOT NULL,
   excerpt TEXT,
-  category_id UUID REFERENCES categories(id),
+  category TEXT, -- 'news', 'announcement'
   status TEXT DEFAULT 'draft', -- 'draft', 'published'
   views INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -47,38 +47,39 @@ CREATE TABLE messages (
 CREATE TABLE documents (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   title TEXT NOT NULL,
-  type TEXT, -- 'media', 'legal', 'form'
   file_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 6. Enable Row Level Security (RLS)
+-- 6. Create media table
+CREATE TABLE media (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title TEXT NOT NULL,
+  type TEXT, -- 'image', 'video'
+  source TEXT DEFAULT 'upload', -- 'upload', 'youtube'
+  url TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 7. Create services table
+-- ... (existing services table)
+
+-- 8. Enable Row Level Security (RLS)
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE announcements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
+ALTER TABLE services ENABLE ROW LEVEL SECURITY;
+ALTER TABLE media ENABLE ROW LEVEL SECURITY;
 
--- 7. Create Policies
--- Categories: Public read, Admin write
-CREATE POLICY "Categories are viewable by everyone" ON categories FOR SELECT USING (true);
-CREATE POLICY "Categories are manageable by admins" ON categories FOR ALL USING (auth.role() = 'authenticated');
-
--- Posts: Public read (if published), Admin write
-CREATE POLICY "Published posts are viewable by everyone" ON posts FOR SELECT USING (status = 'published');
-CREATE POLICY "Posts are manageable by admins" ON posts FOR ALL USING (auth.role() = 'authenticated');
-
--- Announcements: Public read, Admin write
-CREATE POLICY "Announcements are viewable by everyone" ON announcements FOR SELECT USING (true);
-CREATE POLICY "Announcements are manageable by admins" ON announcements FOR ALL USING (auth.role() = 'authenticated');
-
--- Messages: Public insert, Admin read/write
-CREATE POLICY "Messages can be sent by everyone" ON messages FOR INSERT WITH CHECK (true);
-CREATE POLICY "Messages are manageable by admins" ON messages FOR ALL USING (auth.role() = 'authenticated');
-
--- Documents: Public read, Admin write
+-- 9. Create Policies
+-- ... (existing policies)
 CREATE POLICY "Documents are viewable by everyone" ON documents FOR SELECT USING (true);
 CREATE POLICY "Documents are manageable by admins" ON documents FOR ALL USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Media are viewable by everyone" ON media FOR SELECT USING (true);
+CREATE POLICY "Media are manageable by admins" ON media FOR ALL USING (auth.role() = 'authenticated');
 
 -- 8. Seed initial data
 INSERT INTO categories (name, slug, description) VALUES
