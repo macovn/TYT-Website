@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Newspaper, Calendar, Eye, ChevronRight, Phone } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { stripHtml } from '@/lib/utils';
+import { stripHtml, extractFirstImage } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -63,8 +63,16 @@ export default function NewsPage() {
               <div className="grid gap-6">
                 {posts.length > 0 ? posts.map((post) => (
                   <Link key={post.id} href={`/tin-tuc/${post.id}`} className="flex flex-col md:flex-row bg-white rounded-[var(--radius-lg)] overflow-hidden shadow-[var(--shadow)] border border-[var(--gray-100)] transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-lg)]">
-                    <div className="md:w-64 shrink-0 bg-[var(--primary-light)] flex items-center justify-center text-[var(--primary)] h-48 md:h-auto">
-                      <Newspaper className="w-12 h-12" />
+                    <div className="md:w-64 shrink-0 bg-[var(--primary-light)] flex items-center justify-center text-[var(--primary)] h-48 md:h-auto overflow-hidden relative">
+                      {(post.thumbnail || extractFirstImage(post.content)) ? (
+                        <img 
+                          src={post.thumbnail || extractFirstImage(post.content)!} 
+                          alt={post.title} 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <Newspaper className="w-12 h-12" />
+                      )}
                     </div>
                     <div className="p-6 flex-1">
                       <div className="flex items-center gap-3 mb-3">

@@ -10,3 +10,10 @@ export function stripHtml(html: string) {
   const doc = new DOMParser().parseFromString(html, 'text/html');
   return doc.body.textContent || "";
 }
+
+export function extractFirstImage(content: string) {
+  if (!content) return null;
+
+  const match = content.match(/<img[^>]+src="([^">]+)"/);
+  return match ? match[1] : null;
+}

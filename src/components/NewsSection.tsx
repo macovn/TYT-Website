@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Newspaper, ArrowRight, Calendar, Syringe, Apple, Heart } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { stripHtml } from '@/lib/utils';
+import { stripHtml, extractFirstImage } from '@/lib/utils';
 
 export default function NewsSection() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -42,8 +42,16 @@ export default function NewsSection() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {featuredPost ? (
             <div className="post-card">
-              <div className="w-full aspect-[16/10] bg-gradient-to-br from-[var(--primary-light)] to-[var(--primary-mid)] flex items-center justify-center text-[var(--primary)]">
-                <Syringe className="w-16 h-16" />
+              <div className="w-full aspect-[16/10] bg-gradient-to-br from-[var(--primary-light)] to-[var(--primary-mid)] flex items-center justify-center text-[var(--primary)] overflow-hidden relative">
+                {(featuredPost.thumbnail || extractFirstImage(featuredPost.content)) ? (
+                  <img 
+                    src={featuredPost.thumbnail || extractFirstImage(featuredPost.content)!} 
+                    alt={featuredPost.title} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <Syringe className="w-16 h-16" />
+                )}
               </div>
               <div className="p-5">
                 <div className="flex items-center gap-2.5 mb-2.5">
@@ -69,8 +77,16 @@ export default function NewsSection() {
           <div className="flex flex-col gap-3">
             {otherPosts.map((post) => (
               <Link key={post.id} href={`/tin-tuc/${post.id}`} className="flex gap-3.5 bg-white rounded-[var(--radius)] p-3.5 shadow-[var(--shadow)] border border-[var(--gray-100)] hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 transition-all">
-                <div className="w-20 h-[72px] rounded-lg shrink-0 bg-[var(--primary-light)] flex items-center justify-center text-[var(--primary)]">
-                  <Newspaper className="w-7 h-7" />
+                <div className="w-20 h-[72px] rounded-lg shrink-0 bg-[var(--primary-light)] flex items-center justify-center text-[var(--primary)] overflow-hidden relative">
+                  {(post.thumbnail || extractFirstImage(post.content)) ? (
+                    <img 
+                      src={post.thumbnail || extractFirstImage(post.content)!} 
+                      alt={post.title} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Newspaper className="w-7 h-7" />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-[11px] font-bold text-[var(--green)] uppercase mb-1.5">

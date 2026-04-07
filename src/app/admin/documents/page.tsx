@@ -58,6 +58,8 @@ export default function AdminDocuments() {
 
     setSubmitting(true);
     try {
+      console.log("SUPABASE URL (Document Upload):", process.env.NEXT_PUBLIC_SUPABASE_URL);
+      console.log("BUCKET NAME: documents");
       // 1. Upload file to Supabase Storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;

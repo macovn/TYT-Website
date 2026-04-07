@@ -15,7 +15,6 @@ import {
   User
 } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
 
 export default function AdminStaff() {
   const [staff, setStaff] = useState<any[]>([]);
@@ -86,6 +85,8 @@ export default function AdminStaff() {
 
     setSubmitting(true);
     try {
+      console.log("SUPABASE URL (Staff Upload):", process.env.NEXT_PUBLIC_SUPABASE_URL);
+      console.log("BUCKET NAME: staff-images");
       let image_url = editingStaff?.image_url || '';
 
       if (file) {
@@ -203,11 +204,10 @@ export default function AdminStaff() {
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center text-gray-400 border border-gray-200 relative">
                           {item.image_url ? (
-                            <Image 
+                            <img 
                               src={item.image_url} 
                               alt={item.name} 
-                              fill
-                              className="object-cover"
+                              className="w-full h-full object-cover"
                             />
                           ) : (
                             <span className="text-sm font-bold">{item.name[0]}</span>
@@ -311,11 +311,10 @@ export default function AdminStaff() {
                     ) : editingStaff?.image_url ? (
                       <div className="flex flex-col items-center">
                         <div className="w-16 h-16 rounded-full overflow-hidden mb-2 border-2 border-[var(--primary)] relative">
-                          <Image 
+                          <img 
                             src={editingStaff.image_url} 
                             alt="Preview" 
-                            fill
-                            className="object-cover"
+                            className="w-full h-full object-cover"
                           />
                         </div>
                         <span className="text-xs text-gray-500">Nhấn để thay đổi ảnh</span>

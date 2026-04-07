@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import dynamicImport from 'next/dynamic';
+import dynamic from 'next/dynamic';
 
-const RichTextEditor = dynamicImport(() => import('@/components/Editor'), { ssr: false });
+const Editor = dynamic(() => import('@/components/Editor'), { ssr: false });
 import { Newspaper, Send, PlusCircle, Trash2, Edit, Eye } from 'lucide-react';
 import Link from 'next/link';
 
@@ -128,6 +128,10 @@ export default function AdminPage() {
     }
   };
 
+  const handleEditPost = (id: string) => {
+    router.push(`/admin/posts/edit/${id}`);
+  };
+
   const handleSeedData = async () => {
     setLoading(true);
     setMessage('');
@@ -246,7 +250,7 @@ export default function AdminPage() {
 
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-[var(--gray-700)] uppercase tracking-wider">Nội dung</label>
-                    <RichTextEditor 
+                    <Editor 
                       content={formData.content}
                       onChange={(html) => setFormData({...formData, content: html})}
                     />
@@ -315,7 +319,12 @@ export default function AdminPage() {
                           </td>
                           <td className="px-6 py-4 text-right">
                             <div className="flex items-center justify-end gap-2">
-                              <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><Edit className="w-4 h-4" /></button>
+                              <button 
+                                onClick={() => handleEditPost(post.id)}
+                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
                               <button 
                                 onClick={() => handleDelete(post.id)}
                                 className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"

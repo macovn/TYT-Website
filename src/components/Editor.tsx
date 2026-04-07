@@ -57,7 +57,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
       const filePath = `post-images/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('images')
+        .from('media')
         .upload(filePath, file);
 
       if (uploadError) {
@@ -65,14 +65,14 @@ const MenuBar = ({ editor }: { editor: any }) => {
       }
 
       const { data } = supabase.storage
-        .from('images')
+        .from('media')
         .getPublicUrl(filePath);
 
       if (data?.publicUrl) {
         editor.chain().focus().setImage({ src: data.publicUrl }).run();
       }
     } catch (error: any) {
-      alert('Lỗi upload ảnh: ' + error.message + '\nLưu ý: Bạn cần tạo bucket "images" trong Supabase Storage và bật quyền Public.');
+      alert('Lỗi upload ảnh: ' + error.message + '\nLưu ý: Bạn cần tạo bucket "media" trong Supabase Storage và bật quyền Public.');
     } finally {
       setIsUploading(false);
     }
@@ -174,7 +174,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
   );
 };
 
-export default function RichTextEditor({ content, onChange }: EditorProps) {
+export default function Editor({ content, onChange }: EditorProps) {
   const editor = useEditor({
     extensions: [
       StarterKit,

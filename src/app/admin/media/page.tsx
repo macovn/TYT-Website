@@ -16,7 +16,6 @@ import {
   Eye
 } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useCallback } from 'react';
 
 export default function AdminMedia() {
@@ -75,6 +74,8 @@ export default function AdminMedia() {
 
     setSubmitting(true);
     try {
+      console.log("SUPABASE URL (Media Upload):", process.env.NEXT_PUBLIC_SUPABASE_URL);
+      console.log("BUCKET NAME: media");
       let finalUrl = '';
 
       if (source === 'upload' && file) {
@@ -187,11 +188,10 @@ export default function AdminMedia() {
               <div key={item.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 group relative">
                 <div className="aspect-video relative bg-gray-100">
                   {item.type === 'image' ? (
-                    <Image 
+                    <img 
                       src={item.url} 
                       alt={item.title} 
-                      fill
-                      className="object-cover"
+                      className="w-full h-full object-cover"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gray-900">

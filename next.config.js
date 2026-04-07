@@ -1,19 +1,13 @@
+console.log("CONFIG LOADED");
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'picsum.photos',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'aphvyoplcxqxglb7unpv.supabase.co',
-        port: '',
-        pathname: '/storage/v1/object/public/**',
+        protocol: "https",
+        hostname: "wfykgioqceyjslbdpjht.supabase.co",
+        pathname: "/storage/v1/object/public/**",
       },
     ],
   },

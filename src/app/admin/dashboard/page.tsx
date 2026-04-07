@@ -20,11 +20,10 @@ import {
   Users
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import dynamicImport from 'next/dynamic';
+import dynamic from 'next/dynamic';
+import { extractFirstImage } from '@/lib/utils';
 
-const RichTextEditor = dynamicImport(() => import('@/components/Editor'), { ssr: false });
-
-export const dynamic = 'force-dynamic';
+const Editor = dynamic(() => import('@/components/Editor'), { ssr: false });
 
 export default function AdminDashboard() {
   const [session, setSession] = useState<any>(null);
@@ -143,6 +142,7 @@ export default function AdminDashboard() {
     try {
       console.log("SUPABASE URL (Admin):", process.env.NEXT_PUBLIC_SUPABASE_URL);
       console.log("START SUBMIT - Post Data:", newPost);
+      const thumbnail = extractFirstImage(newPost.content);
 
       const { data, error } = await supabase
         .from('posts')
@@ -151,6 +151,7 @@ export default function AdminDashboard() {
             title: newPost.title,
             content: newPost.content,
             category: newPost.category,
+            thumbnail,
             status: 'published'
           }
         ])
@@ -274,6 +275,10 @@ export default function AdminDashboard() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleEditPost = (id: string) => {
+    router.push(`/admin/posts/edit/${id}`);
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">Đang kiểm tra quyền truy cập...</div>;
@@ -413,7 +418,7 @@ export default function AdminDashboard() {
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-bold text-gray-700">Nội dung</label>
-                    <RichTextEditor 
+                    <Editor 
                       content={newPost.content}
                       onChange={(html) => setNewPost({...newPost, content: html})}
                     />
@@ -495,7 +500,12 @@ export default function AdminDashboard() {
                         <td className="px-6 py-4 text-gray-500">{new Date(post.created_at).toLocaleDateString('vi-VN')}</td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
-                            <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><Edit className="w-4 h-4" /></button>
+                            <button 
+                              onClick={() => handleEditPost(post.id)}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
                             <button 
                               onClick={() => handleDeletePost(post.id)}
                               className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -548,7 +558,12 @@ export default function AdminDashboard() {
                       <td className="px-6 py-4 text-gray-500">{new Date(post.created_at).toLocaleDateString('vi-VN')}</td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><Edit className="w-4 h-4" /></button>
+                          <button 
+                            onClick={() => handleEditPost(post.id)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
                           <button 
                             onClick={() => handleDeletePost(post.id)}
                             className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
