@@ -1,11 +1,31 @@
+'use client';
+
 import Hero from "@/components/Hero";
 import AnnouncementTicker from "@/components/AnnouncementTicker";
 import NewsSection from "@/components/NewsSection";
 import ServicesSection from "@/components/ServicesSection";
 import Link from "next/link";
-import { Stethoscope, Syringe, Heart, Activity } from "lucide-react";
+import { Stethoscope, Syringe, Heart, Activity, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import Image from "next/image";
 
 export default function Home() {
+  const [staff, setStaff] = useState<any[]>([]);
+  const [loadingStaff, setLoadingStaff] = useState(true);
+
+  useEffect(() => {
+    async function fetchStaff() {
+      const { data } = await supabase
+        .from('staff')
+        .select('*')
+        .order('created_at', { ascending: true });
+      if (data) setStaff(data);
+      setLoadingStaff(false);
+    }
+    fetchStaff();
+  }, []);
+
   return (
     <>
       <Hero />
@@ -42,7 +62,7 @@ export default function Home() {
       <NewsSection />
       <ServicesSection />
 
-      {/* STAFF SECTION (Static for now, can be moved to DB later) */}
+      {/* STAFF SECTION */}
       <section className="py-14">
         <div className="container">
           <div className="text-center mb-9">
@@ -52,22 +72,36 @@ export default function Home() {
               Đội ngũ y bác sĩ tận tâm, có chuyên môn cao, luôn sẵn sàng phục vụ sức khỏe người dân
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              { name: "BS. Nguyễn Văn An", pos: "Trạm trưởng", dept: "Bác sĩ đa khoa" },
-              { name: "Y sĩ Trần Thị Bình", pos: "Trạm phó", dept: "Y sĩ đa khoa" },
-              { name: "ĐD. Lê Thị Cúc", pos: "Điều dưỡng trưởng", dept: "Cử nhân Điều dưỡng" },
-            ].map((staff, i) => (
-              <div key={i} className="bg-white rounded-[var(--radius-lg)] shadow-[var(--shadow)] border border-[var(--gray-100)] text-center p-6 transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-lg)]">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[var(--primary-light)] to-[var(--primary-mid)] mx-auto mb-4 flex items-center justify-center text-[var(--primary)] border-4 border-[var(--primary-light)]">
-                  <span className="text-2xl font-bold">{staff.name.split(' ').pop()?.[0]}</span>
+          
+          {loadingStaff ? (
+            <div className="flex justify-center py-10">
+              <Loader2 className="w-8 h-8 text-[var(--primary)] animate-spin" />
+            </div>
+          ) : staff.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {staff.map((item, i) => (
+                <div key={i} className="bg-white rounded-[var(--radius-lg)] shadow-[var(--shadow)] border border-[var(--gray-100)] text-center p-6 transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-lg)]">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[var(--primary-light)] to-[var(--primary-mid)] mx-auto mb-4 flex items-center justify-center text-[var(--primary)] border-4 border-[var(--primary-light)] overflow-hidden relative">
+                    {item.image_url ? (
+                      <Image 
+                        src={item.image_url} 
+                        alt={item.name} 
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <span className="text-2xl font-bold">{item.name.split(' ').pop()?.[0]}</span>
+                    )}
+                  </div>
+                  <h3 className="text-[16px] font-bold text-[var(--gray-800)] mb-1">{item.name}</h3>
+                  <div className="text-[13px] font-bold text-[var(--primary)] uppercase mb-1">{item.position}</div>
+                  <div className="text-[12px] text-[var(--gray-500)]">{item.specialization}</div>
                 </div>
-                <h3 className="text-[16px] font-bold text-[var(--gray-800)] mb-1">{staff.name}</h3>
-                <div className="text-[13px] font-bold text-[var(--primary)] uppercase mb-1">{staff.pos}</div>
-                <div className="text-[12px] text-[var(--gray-500)]">{staff.dept}</div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-10 text-gray-400">Đang cập nhật danh sách cán bộ...</div>
+          )}
         </div>
       </section>
     </>

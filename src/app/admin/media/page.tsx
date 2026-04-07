@@ -16,6 +16,8 @@ import {
   Eye
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { useCallback } from 'react';
 
 export default function AdminMedia() {
   const [mediaItems, setMediaItems] = useState<any[]>([]);
@@ -29,19 +31,7 @@ export default function AdminMedia() {
   const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.push('/admin/login');
-        return;
-      }
-      fetchMedia();
-    };
-    checkAuth();
-  }, [router]);
-
-  const fetchMedia = async () => {
+  const fetchMedia = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('media')
@@ -54,7 +44,19 @@ export default function AdminMedia() {
       setMediaItems(data || []);
     }
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push('/admin/login');
+        return;
+      }
+      fetchMedia();
+    };
+    checkAuth();
+  }, [router, fetchMedia]);
 
   const parseYoutubeUrl = (url: string) => {
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
@@ -185,11 +187,11 @@ export default function AdminMedia() {
               <div key={item.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 group relative">
                 <div className="aspect-video relative bg-gray-100">
                   {item.type === 'image' ? (
-                    <img 
+                    <Image 
                       src={item.url} 
                       alt={item.title} 
-                      className="w-full h-full object-cover"
-                      referrerPolicy="no-referrer"
+                      fill
+                      className="object-cover"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gray-900">

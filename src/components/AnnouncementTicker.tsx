@@ -1,14 +1,37 @@
 'use client';
 
-import { Megaphone } from 'lucide-react';
-
-const tickerItems = [
-  "Lịch tiêm chủng tháng 03/2026: Thứ 4 ngày 12/03 tại Trạm Y tế Cái Bầu",
-  "Phòng chống sốt xuất huyết mùa mưa: Diệt lăng quăng, ngủ màn phòng muỗi đốt",
-  "Khám sức khỏe học sinh: 15-20/03/2026 tại các trường trên địa bàn xã",
-];
+import { useState, useEffect } from 'react';
+import { Megaphone, Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import Link from 'next/link';
 
 export default function AnnouncementTicker() {
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      const { data, error } = await supabase
+        .from('announcements')
+        .select('id, title')
+        .eq('is_published', true)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error) {
+        console.error('Error fetching ticker announcements:', error);
+      } else {
+        setAnnouncements(data || []);
+      }
+      setLoading(false);
+    };
+
+    fetchAnnouncements();
+  }, []);
+
+  if (loading) return null;
+  if (announcements.length === 0) return null;
+
   return (
     <div className="announcement-bar">
       <div className="container !px-0">
@@ -18,10 +41,14 @@ export default function AnnouncementTicker() {
           </div>
           <div className="flex-1 overflow-hidden py-3 px-4">
             <div className="flex gap-10 ticker-animation whitespace-nowrap hover:[animation-play-state:paused]">
-              {[...tickerItems, ...tickerItems].map((item, i) => (
-                <div key={i} className="inline-flex items-center gap-2 text-[13.5px] font-medium text-[var(--gray-700)]">
-                  <span className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full"></span> {item}
-                </div>
+              {[...announcements, ...announcements].map((item, i) => (
+                <Link 
+                  key={i} 
+                  href={`/thong-bao/${item.id}`}
+                  className="inline-flex items-center gap-2 text-[13.5px] font-medium text-[var(--gray-700)] hover:text-[var(--primary)] transition-colors"
+                >
+                  <span className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full"></span> {item.title}
+                </Link>
               ))}
             </div>
           </div>

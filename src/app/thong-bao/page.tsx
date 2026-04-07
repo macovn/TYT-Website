@@ -1,151 +1,196 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { Megaphone, Calendar, ChevronRight, Info } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { stripHtml } from '@/lib/utils';
-
-export const dynamic = 'force-dynamic';
+import { 
+  Megaphone, 
+  Calendar, 
+  ChevronRight, 
+  Clock, 
+  ArrowRight,
+  Search,
+  Filter,
+  AlertCircle,
+  Loader2
+} from 'lucide-react';
+import Link from 'next/link';
 
 export default function AnnouncementsPage() {
   const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    async function fetchAnnouncements() {
-      const { data } = await supabase
-        .from('posts')
+    const fetchAnnouncements = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('announcements')
         .select('*')
-        .eq('category', 'announcement')
+        .eq('is_published', true)
         .order('created_at', { ascending: false });
-      
-      if (data) setAnnouncements(data);
-    }
+
+      if (error) {
+        console.error('Error fetching announcements:', error);
+      } else {
+        setAnnouncements(data || []);
+      }
+      setLoading(false);
+    };
+
     fetchAnnouncements();
   }, []);
 
+  const filteredAnnouncements = announcements.filter(a => 
+    a.title?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <>
-      <div className="bg-gradient-to-br from-[var(--primary-dark)] to-[var(--primary)] py-14 text-white">
-        <div className="container">
-          <h1 className="text-4xl font-bold mb-3 font-serif">Thông Báo Quan Trọng</h1>
-          <p className="opacity-90 text-lg">Cập nhật các thông báo khẩn cấp và thông tin từ Trạm Y tế</p>
-          <div className="flex items-center gap-2 text-sm opacity-75 mt-4">
-            <Link href="/">Trang chủ</Link>
-            <span className="opacity-50">/</span>
-            <span>Thông báo</span>
-          </div>
+    <main className="min-h-screen bg-gray-50/50">
+      {/* Hero Section */}
+      <section className="bg-[var(--primary)] text-white py-16 md:py-24 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-0 w-64 h-64 bg-white rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl" />
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full translate-x-1/2 translate-y-1/2 blur-3xl" />
         </div>
-      </div>
-
-      <section className="py-14">
-        <div className="container">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            <div className="lg:col-span-2 space-y-6">
-              {announcements.length > 0 ? announcements.map((ann) => (
-                <div key={ann.id} className="bg-white rounded-2xl p-6 shadow-[var(--shadow)] border border-[var(--gray-100)] hover:border-[var(--primary)] transition-all group">
-                  <div className="flex gap-5 items-start">
-                    <div className="w-14 h-14 bg-[var(--primary-light)] rounded-xl flex items-center justify-center text-[var(--primary)] shrink-0 group-hover:bg-[var(--primary)] group-hover:text-white transition-all">
-                      <Megaphone className="w-6 h-6" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-[11px] font-bold text-[var(--primary)] uppercase tracking-wider">Thông báo</span>
-                        <span className="text-[12px] text-[var(--gray-400)] flex items-center gap-1 font-medium">
-                          <Calendar className="w-3 h-3" /> {new Date(ann.created_at).toLocaleDateString('vi-VN')}
-                        </span>
-                      </div>
-                      <h3 className="text-lg font-bold text-[var(--gray-800)] leading-tight mb-3 group-hover:text-[var(--primary)] transition-colors">
-                        {ann.title}
-                      </h3>
-                      <p className="text-[14px] text-[var(--gray-600)] leading-relaxed">
-                        {stripHtml(ann.content || "")}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )) : (
-                <div className="space-y-6">
-                  {[
-                    { title: "Lịch tiêm chủng mở rộng tháng 04/2026", date: "30/03/2026", content: "Trạm Y tế Cái Bầu thông báo lịch tiêm chủng mở rộng tháng 04/2026 cho trẻ em từ 0-24 tháng tuổi vào sáng thứ 4 hàng tuần. Kính mời các bậc phụ huynh đưa con em đến đúng giờ." },
-                    { title: "Thông báo về việc khám sức khỏe định kỳ cho người cao tuổi", date: "28/03/2026", content: "Thực hiện kế hoạch chăm sóc sức khỏe người cao tuổi, Trạm Y tế tổ chức khám sức khỏe định kỳ cho các cụ từ 60 tuổi trở lên vào sáng thứ 5 tuần tới." },
-                    { title: "Khuyến cáo phòng chống dịch bệnh mùa hè", date: "25/03/2026", content: "Để chủ động phòng chống dịch bệnh mùa hè, đặc biệt là sốt xuất huyết và tay chân miệng, Trạm Y tế khuyến cáo người dân thực hiện các biện pháp vệ sinh môi trường, diệt lăng quăng." },
-                  ].map((ann, i) => (
-                    <div key={i} className="bg-white rounded-2xl p-6 shadow-[var(--shadow)] border border-[var(--gray-100)] hover:border-[var(--primary)] transition-all group">
-                      <div className="flex gap-5 items-start">
-                        <div className="w-14 h-14 bg-[var(--primary-light)] rounded-xl flex items-center justify-center text-[var(--primary)] shrink-0 group-hover:bg-[var(--primary)] group-hover:text-white transition-all">
-                          <Megaphone className="w-6 h-6" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-[11px] font-bold text-[var(--primary)] uppercase tracking-wider">Thông báo</span>
-                            <span className="text-[12px] text-[var(--gray-400)] flex items-center gap-1 font-medium">
-                              <Calendar className="w-3 h-3" /> {ann.date}
-                            </span>
-                          </div>
-                          <h3 className="text-lg font-bold text-[var(--gray-800)] leading-tight mb-3 group-hover:text-[var(--primary)] transition-colors">
-                            {ann.title}
-                          </h3>
-                          <p className="text-[14px] text-[var(--gray-600)] leading-relaxed">
-                            {ann.content}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+        
+        <div className="container relative z-10">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full text-sm font-medium mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <Megaphone size={18} />
+              <span>Thông tin từ Trạm Y tế</span>
             </div>
-
-            <div className="space-y-8">
-              <div className="bg-[var(--primary-light)] rounded-3xl p-8 border border-[var(--primary)] border-opacity-10">
-                <h3 className="text-xl font-bold text-[var(--primary)] mb-4 flex items-center gap-3">
-                  <Info className="w-6 h-6" /> Lưu ý quan trọng
-                </h3>
-                <ul className="space-y-4">
-                  <li className="flex gap-3 text-[14px] text-[var(--gray-700)] leading-relaxed">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--primary)] shrink-0 mt-2"></div>
-                    Các thông báo khẩn cấp sẽ được cập nhật liên tục trên website và loa phát thanh xã.
-                  </li>
-                  <li className="flex gap-3 text-[14px] text-[var(--gray-700)] leading-relaxed">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--primary)] shrink-0 mt-2"></div>
-                    Người dân nên theo dõi thường xuyên để không bỏ lỡ các đợt tiêm chủng và khám sức khỏe định kỳ.
-                  </li>
-                  <li className="flex gap-3 text-[14px] text-[var(--gray-700)] leading-relaxed">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--primary)] shrink-0 mt-2"></div>
-                    Mọi thắc mắc về nội dung thông báo, xin vui lòng liên hệ trực tiếp tại Trạm hoặc qua hotline.
-                  </li>
-                </ul>
-              </div>
-
-              <div className="bg-white rounded-2xl p-6 shadow-[var(--shadow)] border border-[var(--gray-100)]">
-                <h3 className="text-lg font-bold text-[var(--gray-800)] mb-4 pb-2 border-b-2 border-[var(--primary)] inline-block">Liên kết nhanh</h3>
-                <ul className="space-y-2">
-                  {[
-                    { label: "Lịch khám bệnh", href: "/dich-vu" },
-                    { label: "Kiến thức phòng bệnh", href: "/suc-khoe" },
-                    { label: "Tải mẫu văn bản", href: "/tai-lieu" },
-                    { label: "Gửi phản hồi", href: "/lien-he" },
-                  ].map((link, i) => (
-                    <li key={i}>
-                      <Link href={link.href} className="flex items-center justify-between py-2.5 text-[14px] text-[var(--gray-700)] hover:text-[var(--primary)] transition-colors group">
-                        <span className="flex items-center gap-2"><ChevronRight className="w-3 h-3 text-[var(--primary)]" /> {link.label}</span>
-                        <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight animate-in fade-in slide-in-from-bottom-6 duration-700">
+              Thông báo & <br />
+              <span className="text-[var(--accent)]">Tin tức mới nhất</span>
+            </h1>
+            <p className="text-lg md:text-xl text-white/80 max-w-2xl animate-in fade-in slide-in-from-bottom-8 duration-1000">
+              Cập nhật các thông tin quan trọng về lịch tiêm chủng, khám sức khỏe định kỳ và các hoạt động y tế tại xã Cái Bầu.
+            </p>
           </div>
         </div>
       </section>
-    </>
-  );
-}
 
-function ArrowRight(props: any) {
-  return (
-    <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-  )
+      {/* Content Section */}
+      <section className="py-12 md:py-20 -mt-10">
+        <div className="container">
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* Main Content */}
+            <div className="flex-1 space-y-8">
+              {/* Search & Filter Bar */}
+              <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 items-center">
+                <div className="relative flex-1 w-full">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                  <input
+                    type="text"
+                    placeholder="Tìm kiếm thông báo..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border-transparent focus:bg-white focus:border-[var(--primary)] focus:ring-4 focus:ring-[var(--primary)]/10 transition-all outline-none"
+                  />
+                </div>
+                <div className="flex items-center gap-2 text-gray-500 font-medium px-4">
+                  <Filter size={18} />
+                  <span>Sắp xếp: Mới nhất</span>
+                </div>
+              </div>
+
+              {/* Announcements List */}
+              <div className="space-y-6">
+                {loading ? (
+                  <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
+                    <Loader2 className="animate-spin text-[var(--primary)] mb-4" size={40} />
+                    <p className="text-gray-500 font-medium">Đang tải thông báo...</p>
+                  </div>
+                ) : filteredAnnouncements.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-gray-200 text-center px-6">
+                    <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                      <AlertCircle className="text-gray-300" size={40} />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Không tìm thấy thông báo</h3>
+                    <p className="text-gray-500 max-w-md">
+                      Hiện tại chưa có thông báo nào phù hợp với tìm kiếm của bạn. Vui lòng thử lại với từ khóa khác.
+                    </p>
+                  </div>
+                ) : (
+                  filteredAnnouncements.map((a, index) => (
+                    <article 
+                      key={a.id} 
+                      className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 hover:shadow-xl hover:border-[var(--primary)]/20 transition-all group animate-in fade-in slide-in-from-bottom-10 duration-500"
+                      style={{ animationDelay: `${index * 100}ms` }}
+                    >
+                      <div className="flex flex-col md:flex-row md:items-start gap-6">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                            <span className="flex items-center gap-1.5 bg-gray-100 px-3 py-1 rounded-full font-medium">
+                              <Calendar size={14} />
+                              {new Date(a.created_at).toLocaleDateString('vi-VN')}
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                              <Clock size={14} />
+                              {new Date(a.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          
+                          <h2 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-[var(--primary)] transition-colors leading-tight">
+                            {a.title}
+                          </h2>
+                          
+                          <div 
+                            className="text-gray-600 line-clamp-3 mb-6 prose prose-sm max-w-none"
+                            dangerouslySetInnerHTML={{ __html: a.content }}
+                          />
+                          
+                          <Link 
+                            href={`/thong-bao/${a.id}`}
+                            className="inline-flex items-center gap-2 text-[var(--primary)] font-bold hover:gap-4 transition-all"
+                          >
+                            Xem chi tiết
+                            <ArrowRight size={18} />
+                          </Link>
+                        </div>
+                      </div>
+                    </article>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Sidebar */}
+            <aside className="lg:w-80 space-y-8">
+              {/* Important Info Card */}
+              <div className="bg-[var(--primary)] rounded-3xl p-6 text-white overflow-hidden relative">
+                <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 opacity-20">
+                  <Megaphone size={120} />
+                </div>
+                <h3 className="text-xl font-bold mb-4 relative z-10">Liên hệ khẩn cấp</h3>
+                <p className="text-white/80 mb-6 relative z-10">
+                  Trong trường hợp khẩn cấp, vui lòng liên hệ trực tiếp với trạm y tế qua số điện thoại:
+                </p>
+                <div className="bg-white/20 backdrop-blur-md p-4 rounded-2xl relative z-10">
+                  <p className="text-sm font-medium text-white/70 mb-1">Hotline 24/7</p>
+                  <p className="text-2xl font-bold">0203.3858.123</p>
+                </div>
+              </div>
+
+              {/* Categories/Tags (Optional) */}
+              <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Danh mục</h3>
+                <div className="space-y-2">
+                  {['Tất cả thông báo', 'Lịch tiêm chủng', 'Khám sức khỏe', 'Phòng chống dịch'].map((cat) => (
+                    <button 
+                      key={cat}
+                      className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 text-gray-600 hover:text-[var(--primary)] transition-all group"
+                    >
+                      <span className="font-medium">{cat}</span>
+                      <ChevronRight size={16} className="text-gray-300 group-hover:text-[var(--primary)]" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
 }

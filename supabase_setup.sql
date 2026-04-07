@@ -23,11 +23,11 @@ CREATE TABLE posts (
 );
 
 -- 3. Create announcements table
-CREATE TABLE announcements (
+CREATE TABLE IF NOT EXISTS announcements (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  title TEXT NOT NULL,
-  content TEXT NOT NULL,
-  is_active BOOLEAN DEFAULT TRUE,
+  title TEXT,
+  content TEXT,
+  is_published BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -64,7 +64,17 @@ CREATE TABLE media (
 -- 7. Create services table
 -- ... (existing services table)
 
--- 8. Enable Row Level Security (RLS)
+-- 8. Create staff table
+CREATE TABLE staff (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  position TEXT,
+  specialization TEXT,
+  image_url TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 9. Enable Row Level Security (RLS)
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE announcements ENABLE ROW LEVEL SECURITY;
@@ -72,14 +82,83 @@ ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE services ENABLE ROW LEVEL SECURITY;
 ALTER TABLE media ENABLE ROW LEVEL SECURITY;
+ALTER TABLE staff ENABLE ROW LEVEL SECURITY;
 
--- 9. Create Policies
+-- 10. Create Policies
 -- ... (existing policies)
-CREATE POLICY "Documents are viewable by everyone" ON documents FOR SELECT USING (true);
-CREATE POLICY "Documents are manageable by admins" ON documents FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Staff are viewable by everyone" ON staff FOR SELECT USING (true);
+CREATE POLICY "Staff are manageable by admins" ON staff FOR ALL USING (auth.role() = 'authenticated');
 
-CREATE POLICY "Media are viewable by everyone" ON media FOR SELECT USING (true);
-CREATE POLICY "Media are manageable by admins" ON media FOR ALL USING (auth.role() = 'authenticated');
+-- 11. Storage Setup
+-- Create the bucket if it doesn't exist and set to public
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('staff-images', 'staff-images', true)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('media', 'media', true)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('documents', 'documents', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Storage Policies for staff-images
+-- These policies allow anyone to read and authenticated users to upload to the staff-images bucket
+
+CREATE POLICY "Allow public read staff images"
+ON storage.objects FOR SELECT
+USING ( bucket_id = 'staff-images' );
+
+CREATE POLICY "Allow upload staff images"
+ON storage.objects FOR INSERT
+WITH CHECK ( bucket_id = 'staff-images' AND auth.role() = 'authenticated' );
+
+CREATE POLICY "Allow update staff images"
+ON storage.objects FOR UPDATE
+USING ( bucket_id = 'staff-images' AND auth.role() = 'authenticated' );
+
+CREATE POLICY "Allow delete staff images"
+ON storage.objects FOR DELETE
+USING ( bucket_id = 'staff-images' AND auth.role() = 'authenticated' );
+
+-- Storage Policies for media
+-- These policies allow anyone to read and authenticated users to upload to the media bucket
+
+CREATE POLICY "Allow public read media"
+ON storage.objects FOR SELECT
+USING ( bucket_id = 'media' );
+
+CREATE POLICY "Allow upload media"
+ON storage.objects FOR INSERT
+WITH CHECK ( bucket_id = 'media' AND auth.role() = 'authenticated' );
+
+CREATE POLICY "Allow update media"
+ON storage.objects FOR UPDATE
+USING ( bucket_id = 'media' AND auth.role() = 'authenticated' );
+
+CREATE POLICY "Allow delete media"
+ON storage.objects FOR DELETE
+USING ( bucket_id = 'media' AND auth.role() = 'authenticated' );
+
+-- Storage Policies for documents
+-- These policies allow anyone to read and authenticated users to upload to the documents bucket
+
+CREATE POLICY "Allow public read documents"
+ON storage.objects FOR SELECT
+USING ( bucket_id = 'documents' );
+
+CREATE POLICY "Allow upload documents"
+ON storage.objects FOR INSERT
+WITH CHECK ( bucket_id = 'documents' AND auth.role() = 'authenticated' );
+
+CREATE POLICY "Allow update documents"
+ON storage.objects FOR UPDATE
+USING ( bucket_id = 'documents' AND auth.role() = 'authenticated' );
+
+CREATE POLICY "Allow delete documents"
+ON storage.objects FOR DELETE
+USING ( bucket_id = 'documents' AND auth.role() = 'authenticated' );
 
 -- 8. Seed initial data
 INSERT INTO categories (name, slug, description) VALUES
@@ -98,7 +177,8 @@ SELECT
   'published'
 FROM categories WHERE slug = 'hoat-dong-tram' LIMIT 1;
 
--- Insert sample announcements
-INSERT INTO announcements (title, content) VALUES
-('Lịch trực Tết Nguyên Đán 2026', 'Trạm Y tế Cái Bầu thông báo lịch trực cấp cứu 24/24 trong dịp Tết Nguyên Đán...'),
-('Khám sức khỏe định kỳ cho người cao tuổi', 'Chương trình khám sức khỏe miễn phí cho người cao tuổi sẽ diễn ra vào sáng thứ 7 tuần này...');
+-- 12. Fix existing unconfirmed users
+-- Run this in the SQL Editor to confirm all current users who haven't confirmed their email
+UPDATE auth.users
+SET email_confirmed_at = NOW()
+WHERE email_confirmed_at IS NULL;

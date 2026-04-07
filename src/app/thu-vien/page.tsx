@@ -13,6 +13,7 @@ import {
   Maximize2
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function GalleryPage() {
   const [mediaItems, setMediaItems] = useState<any[]>([]);
@@ -73,11 +74,11 @@ export default function GalleryPage() {
                 >
                   <div className="aspect-square relative bg-gray-100">
                     {item.type === 'image' ? (
-                      <img 
+                      <Image 
                         src={item.url} 
                         alt={item.title} 
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        referrerPolicy="no-referrer"
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-110"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gray-900 overflow-hidden">
@@ -121,13 +122,13 @@ export default function GalleryPage() {
           </button>
 
           <div className="max-w-6xl w-full h-full flex flex-col items-center justify-center relative">
-            <div className="w-full h-full flex items-center justify-center overflow-hidden rounded-2xl shadow-2xl bg-black/50">
+            <div className="w-full h-full flex items-center justify-center overflow-hidden rounded-2xl shadow-2xl bg-black/50 relative">
               {selectedItem.type === 'image' ? (
-                <img 
+                <Image 
                   src={selectedItem.url} 
                   alt={selectedItem.title} 
-                  className="max-w-full max-h-full object-contain animate-in zoom-in-95 duration-300"
-                  referrerPolicy="no-referrer"
+                  fill
+                  className="object-contain animate-in zoom-in-95 duration-300"
                 />
               ) : selectedItem.source === 'youtube' ? (
                 <iframe 

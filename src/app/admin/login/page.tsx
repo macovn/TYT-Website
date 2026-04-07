@@ -41,6 +41,8 @@ export default function LoginPage() {
         setError("Lỗi: API Key không hợp lệ. Vui lòng kiểm tra lại NEXT_PUBLIC_SUPABASE_ANON_KEY trên Vercel.");
       } else if (error.message === "Invalid login credentials") {
         setError("Sai tài khoản hoặc mật khẩu");
+      } else if (error.message.includes("Email logins are disabled")) {
+        setError("Lỗi: Đăng nhập bằng Email đang bị tắt trong Supabase Dashboard. Vui lòng vào Authentication -> Providers -> Email và BẬT nó lên.");
       } else {
         setError(`Lỗi đăng nhập: ${error.message}`);
       }
@@ -129,6 +131,18 @@ export default function LoginPage() {
                 >
                   Khởi tạo Admin
                 </button>
+              </div>
+            )}
+            {error?.includes("Email logins are disabled") && (
+              <div className="mt-4 pt-4 border-t border-red-200">
+                <p className="text-[11px] font-normal mb-2 text-red-700 font-bold">HƯỚNG DẪN CỐ ĐỊNH:</p>
+                <ol className="text-[10px] font-normal list-decimal pl-4 space-y-1 mt-1">
+                  <li>Vào <b>Supabase Dashboard</b></li>
+                  <li>Chọn dự án của bạn</li>
+                  <li>Vào <b>Authentication</b> {'>'} <b>Providers</b></li>
+                  <li>Tìm <b>Email</b> và đảm bảo nó đang ở trạng thái <b>Enabled</b></li>
+                  <li>Trong cùng trang đó, hãy TẮT <b>Confirm email</b> nếu bạn không muốn xác nhận qua mail.</li>
+                </ol>
               </div>
             )}
           </div>

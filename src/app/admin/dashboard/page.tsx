@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -16,7 +16,8 @@ import {
   Trash2, 
   Edit,
   Stethoscope,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Users
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import dynamicImport from 'next/dynamic';
@@ -41,48 +42,9 @@ export default function AdminDashboard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    async function fetchProfile(user: any) {
-      const ADMIN_EMAIL = "macovn@gmail.com";
-      
-      // Bypass for hardcoded admin
-      if (user.email === ADMIN_EMAIL) {
-        setRole('admin');
-        setLoading(false);
-        return;
-      }
-
-      const { data } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-      
-      if (data) {
-        setRole(data.role);
-        if (data.role !== 'admin' && data.role !== 'editor') {
-          router.push('/');
-        }
-      } else {
-        // If profile not found and not hardcoded admin, block access
-        router.push('/');
-      }
-      setLoading(false);
-    }
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        router.push('/admin/login');
-      } else {
-        setSession(session);
-        fetchProfile(session.user);
-        fetchData();
-      }
-    });
-  }, [router]);
-
-  async function fetchData() {
-    console.log("Fetching data...");
+  const fetchData = useCallback(async (currentSession?: any) => {
+    console.log("FETCH CALLED - fetchData");
+    const activeSession = currentSession || session;
     
     try {
       // Fetch Posts
@@ -107,13 +69,67 @@ export default function AdminDashboard() {
         if (usersData) setUsers(usersData);
         
         // Check if current user profile exists
-        const { data: myProfile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-        console.log("DEBUG: My current profile in DB:", myProfile);
+        if (activeSession?.user?.id) {
+          const { data: myProfile } = await supabase.from('profiles').select('*').eq('id', activeSession.user.id).single();
+          console.log("DEBUG: My current profile in DB:", myProfile);
+        }
       }
     } catch (err) {
       console.error("Exception in fetchData:", err);
     }
-  }
+  }, [session]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function fetchProfile(user: any) {
+      const ADMIN_EMAIL = "macovn@gmail.com";
+      
+      // Bypass for hardcoded admin
+      if (user.email === ADMIN_EMAIL) {
+        if (mounted) {
+          setRole('admin');
+          setLoading(false);
+        }
+        return;
+      }
+
+      const { data } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      
+      if (mounted) {
+        if (data) {
+          setRole(data.role);
+          if (data.role !== 'admin' && data.role !== 'editor') {
+            router.push('/');
+          }
+        } else {
+          // If profile not found and not hardcoded admin, block access
+          router.push('/');
+        }
+        setLoading(false);
+      }
+    }
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        router.push('/admin/login');
+      } else {
+        if (mounted) {
+          setSession(session);
+          fetchProfile(session.user);
+          fetchData(session);
+        }
+      }
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, [router]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -328,6 +344,13 @@ export default function AdminDashboard() {
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold text-white/60 hover:bg-white/5 hover:text-white transition-colors"
           >
             <ImageIcon className="w-4 h-4" /> Thư viện Media
+          </Link>
+
+          <Link 
+            href="/admin/staff"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold text-white/60 hover:bg-white/5 hover:text-white transition-colors"
+          >
+            <Users className="w-4 h-4" /> Quản lý cán bộ
           </Link>
         </nav>
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Save, ArrowLeft, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
@@ -16,6 +16,24 @@ export default function AdminPageEdit() {
   const router = useRouter();
   const params = useParams();
   const slug = params.slug as string;
+
+  const fetchPage = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('pages')
+      .select('*')
+      .eq('slug', slug)
+      .single();
+
+    if (error) {
+      console.error('Error fetching page:', error);
+      setMessage({ type: 'error', text: 'Không tìm thấy trang này.' });
+    } else {
+      setPage(data);
+      setContent(data.content || '');
+    }
+    setLoading(false);
+  }, [slug]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -46,25 +64,7 @@ export default function AdminPageEdit() {
     };
 
     checkAuth();
-  }, [router, slug]);
-
-  const fetchPage = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('pages')
-      .select('*')
-      .eq('slug', slug)
-      .single();
-
-    if (error) {
-      console.error('Error fetching page:', error);
-      setMessage({ type: 'error', text: 'Không tìm thấy trang này.' });
-    } else {
-      setPage(data);
-      setContent(data.content || '');
-    }
-    setLoading(false);
-  };
+  }, [router, slug, fetchPage]);
 
   const handleSave = async () => {
     setSaving(true);

@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     });
 
     // 1. Create user in Auth
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+    let { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
@@ -33,32 +33,75 @@ export async function POST(request: Request) {
     });
 
     if (authError) {
-      console.error('Auth Create Error:', authError);
-      return NextResponse.json({ error: authError.message }, { status: 400 });
+      console.log('Initial Auth Create Attempt Error:', authError.message);
+      
+      // If user already exists, try to update/confirm them
+      const isAlreadyRegistered = 
+        authError.message.toLowerCase().includes('already registered') || 
+        authError.message.toLowerCase().includes('already exists');
+
+      if (isAlreadyRegistered) {
+        console.log('User already exists, attempting to confirm and update...');
+        
+        // Find user by email (case-insensitive)
+        const { data, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+        
+        if (listError) {
+          console.error('List Users Error:', listError);
+          return NextResponse.json({ error: 'Could not list users to find existing account: ' + listError.message }, { status: 400 });
+        }
+
+        const users = data.users;
+        const normalizedEmail = email.toLowerCase().trim();
+        const existingUser = users.find((u: any) => u.email?.toLowerCase().trim() === normalizedEmail);
+        
+        if (existingUser) {
+          console.log('Found existing user ID:', existingUser.id);
+          const { data: updateData, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+            existingUser.id,
+            { 
+              email_confirm: true,
+              password: password, // Update password too
+              user_metadata: { role }
+            }
+          );
+          
+          if (updateError) {
+            console.error('Update User Error:', updateError);
+            return NextResponse.json({ error: 'User exists but could not be updated/confirmed: ' + updateError.message }, { status: 400 });
+          }
+          
+          console.log('Successfully updated/confirmed existing user.');
+          authData = { user: updateData.user };
+        } else {
+          console.error('User reported as registered but not found in list (first 50 users).');
+          return NextResponse.json({ error: 'Tài khoản đã tồn tại nhưng không tìm thấy trong danh sách để tự động xác nhận. Vui lòng liên hệ quản trị viên.' }, { status: 400 });
+        }
+      } else {
+        return NextResponse.json({ error: authError.message }, { status: 400 });
+      }
     }
 
     if (authData.user) {
-      console.log('User created in Auth:', authData.user.id);
+      console.log('User ID to process in profiles:', authData.user.id);
       
-      // 2. Insert profile explicitly
-      const { data: insertData, error: profileError } = await supabaseAdmin
+      // 2. Upsert profile directly to be cleaner
+      const { data: profileData, error: profileError } = await supabaseAdmin
         .from('profiles')
-        .insert([
-          {
-            id: authData.user.id,
-            email: email,
-            role: role || 'editor',
-            created_at: new Date().toISOString()
-          }
-        ])
+        .upsert({
+          id: authData.user.id,
+          email: email.toLowerCase().trim(),
+          role: role || 'editor',
+          updated_at: new Date().toISOString()
+        })
         .select();
 
       if (profileError) {
-        console.error('Profile Insert Error:', profileError);
-        // Fallback to upsert
-        await supabaseAdmin.from('profiles').upsert({ id: authData.user.id, email, role: role || 'editor' });
+        console.error('Profile Upsert Error:', profileError);
+        // We don't return 400 here because the Auth part succeeded, 
+        // but we log it for debugging.
       } else {
-        console.log('SUCCESS: Profile inserted into DB:', insertData);
+        console.log('SUCCESS: Profile upserted into DB:', profileData?.[0]?.id);
       }
     }
 
