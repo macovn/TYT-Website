@@ -122,8 +122,10 @@ export default function AdminPage() {
       .eq('id', id);
 
     if (error) {
-      alert("Lỗi khi xóa: " + error.message);
+      alert("Lỗi xoá bài");
+      console.error(error);
     } else {
+      alert("Đã xoá");
       fetchPosts();
     }
   };
@@ -222,7 +224,9 @@ export default function AdminPage() {
             <div className="bg-white rounded-3xl shadow-xl border border-[var(--gray-100)] overflow-hidden sticky top-8 max-h-[calc(100vh-4rem)] overflow-y-auto">
               <div className="bg-[var(--primary)] p-6 text-white">
                 <div className="flex items-center gap-3 mb-2">
-                  <PlusCircle className="w-6 h-6" />
+                  <div className="w-10 h-10 bg-white rounded-full p-1 shrink-0">
+                    <img src="/images/logo.png" alt="Logo" className="w-full h-full object-contain" />
+                  </div>
                   <h1 className="text-xl font-bold">Thêm bài viết</h1>
                 </div>
                 <p className="text-xs opacity-80">Tạo nội dung mới cho trang tin tức</p>

@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { PlusCircle, Menu, X, ChevronDown } from 'lucide-react';
+import Image from 'next/image';
+import { Menu, X, ChevronDown } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -53,8 +54,14 @@ export default function Header() {
       <div className="container">
         <div className="flex items-center justify-between py-3.5 gap-5">
           <Link href="/" className="flex items-center gap-3.5">
-            <div className="logo-icon">
-              <PlusCircle className="w-7 h-7 text-white" />
+            <div className="relative w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 overflow-hidden rounded-full shrink-0 border border-gray-100 shadow-sm">
+              <Image
+                src="/images/logo.png"
+                alt="Trạm Y tế Cái Bầu"
+                fill
+                className="object-contain p-0.5"
+                referrerPolicy="no-referrer"
+              />
             </div>
             <div className="logo-text">
               <h1 className="text-[17px] font-extrabold text-[var(--primary-dark)] leading-tight tracking-tight">
