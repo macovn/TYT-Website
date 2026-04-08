@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import dynamic from 'next/dynamic';
 import { extractFirstImage } from '@/lib/utils';
-import { Newspaper, Send, ArrowLeft, Loader2, Save } from 'lucide-react';
+import { Newspaper, Send, ArrowLeft, Loader2, Save, Youtube, Plus } from 'lucide-react';
 import Link from 'next/link';
+import type { EditorRef } from '@/components/Editor';
 
 const Editor = dynamic(() => import('@/components/Editor'), { ssr: false });
 
@@ -14,16 +15,26 @@ export default function EditPostPage() {
   const params = useParams();
   const id = params.id as string;
   const router = useRouter();
+  const editorRef = useRef<EditorRef>(null);
 
   const [formData, setFormData] = useState({
     title: '',
     content: '',
     status: 'published'
   });
+  const [youtubeUrl, setYoutubeUrl] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [role, setRole] = useState<string | null>(null);
+
+  const handleInsertYoutube = () => {
+    if (!youtubeUrl) return;
+    if (editorRef.current) {
+      editorRef.current.insertYoutubeVideo(youtubeUrl);
+      setYoutubeUrl('');
+    }
+  };
 
   const fetchPost = useCallback(async () => {
     console.log("FETCH CALLED - fetchPost", id);
@@ -179,7 +190,30 @@ export default function EditPostPage() {
 
               <div className="space-y-2">
                 <label className="text-sm font-bold text-[var(--gray-700)] uppercase tracking-wider">Nội dung chi tiết</label>
+                
+                {/* Chèn Video YouTube */}
+                <div className="flex flex-col sm:flex-row gap-2 mb-4 p-4 bg-red-50 rounded-xl border border-red-100">
+                  <div className="flex-1 relative">
+                    <Youtube className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-red-500" />
+                    <input 
+                      type="text"
+                      value={youtubeUrl}
+                      onChange={(e) => setYoutubeUrl(e.target.value)}
+                      placeholder="Dán link YouTube (ví dụ: https://www.youtube.com/watch?v=...)"
+                      className="w-full pl-10 pr-4 py-2.5 text-sm border border-red-200 rounded-lg focus:outline-none focus:border-red-500 transition-all"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleInsertYoutube}
+                    className="bg-red-500 text-white px-6 py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 hover:bg-red-600 transition-all shadow-sm active:scale-95"
+                  >
+                    <Plus className="w-4 h-4" /> Chèn Video
+                  </button>
+                </div>
+
                 <Editor 
+                  ref={editorRef}
                   content={formData.content}
                   onChange={(html) => setFormData({...formData, content: html})}
                 />

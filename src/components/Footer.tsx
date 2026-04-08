@@ -36,7 +36,7 @@ export default function Footer() {
               </li>
               <li className="flex items-start gap-2.5">
                 <Clock className="w-4 h-4 text-[var(--accent)] shrink-0 mt-0.5" />
-                <span>T2–T6: 7:00–17:00 | Cấp cứu: 24/7</span>
+                <span>T2-T6: 7:30–16:30 | Cấp cứu: 24/7</span>
               </li>
             </ul>
           </div>

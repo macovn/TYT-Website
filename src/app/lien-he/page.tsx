@@ -60,7 +60,7 @@ export default function ContactPage() {
                   { icon: <Phone />, label: "Điện thoại", value: "0203.3795.898" },
                   { icon: <Activity className="text-[var(--red)]" />, label: "Đường dây cấp cứu", value: "0203.3822.115", highlight: true },
                   { icon: <Mail />, label: "Email", value: "lienhe@tramytecaibau.vn" },
-                  { icon: <Clock />, label: "Giờ làm việc", value: "T2–T6: 7:00–17:00 | T7 & CN: Cấp cứu 24/7" },
+                  { icon: <Clock />, label: "Giờ làm việc", value: "T2-T6: 7:30–16:30 | T7 & CN: Cấp cứu 24/7" },
                 ].map((item, i) => (
                   <div key={i} className="flex gap-5 bg-white p-5 rounded-xl shadow-[var(--shadow)] border border-[var(--gray-100)] items-start">
                     <div className="w-12 h-12 bg-[var(--primary-light)] rounded-xl flex items-center justify-center text-[var(--primary)] shrink-0">

@@ -8,7 +8,7 @@ const services = [
     name: "Khám chữa bệnh",
     icon: <Stethoscope className="w-6 h-6" />,
     desc: "Khám và điều trị các bệnh thông thường, cấp phát thuốc BHYT cho người dân trong xã.",
-    schedule: "T2–T6: 7:00–11:30 và 13:30–16:30"
+    schedule: "T2–T6: 7:30–11:30 và 13:30–16:30"
   },
   {
     name: "Tiêm chủng mở rộng",

@@ -20,11 +20,15 @@ import {
   Code
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { useState } from 'react';
+import { useState, forwardRef, useImperativeHandle } from 'react';
 
 interface EditorProps {
   content: string;
   onChange: (html: string) => void;
+}
+
+export interface EditorRef {
+  insertYoutubeVideo: (url: string) => void;
 }
 
 const MenuBar = ({ editor }: { editor: any }) => {
@@ -174,7 +178,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
   );
 };
 
-export default function Editor({ content, onChange }: EditorProps) {
+const Editor = forwardRef<EditorRef, EditorProps>(({ content, onChange }, ref) => {
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -207,6 +211,18 @@ export default function Editor({ content, onChange }: EditorProps) {
     },
   });
 
+  useImperativeHandle(ref, () => ({
+    insertYoutubeVideo: (url: string) => {
+      if (editor) {
+        editor.commands.setYoutubeVideo({
+          src: url,
+          width: 640,
+          height: 480,
+        });
+      }
+    }
+  }));
+
   // Update content if it changes from outside (e.g. form reset)
   if (editor && editor.getHTML() !== content && content === '') {
     editor.commands.setContent('');
@@ -220,4 +236,8 @@ export default function Editor({ content, onChange }: EditorProps) {
       </div>
     </div>
   );
-}
+});
+
+Editor.displayName = 'Editor';
+
+export default Editor;

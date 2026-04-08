@@ -1,13 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import dynamic from 'next/dynamic';
 
 const Editor = dynamic(() => import('@/components/Editor'), { ssr: false });
-import { Newspaper, Send, PlusCircle, Trash2, Edit, Eye } from 'lucide-react';
+import { Newspaper, Send, PlusCircle, Trash2, Edit, Eye, Youtube, Plus } from 'lucide-react';
 import Link from 'next/link';
+import type { EditorRef } from '@/components/Editor';
 
 export default function AdminPage() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -18,10 +19,20 @@ export default function AdminPage() {
     content: '',
     status: 'published'
   });
+  const [youtubeUrl, setYoutubeUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [message, setMessage] = useState('');
   const router = useRouter();
+  const editorRef = useRef<EditorRef>(null);
+
+  const handleInsertYoutube = () => {
+    if (!youtubeUrl) return;
+    if (editorRef.current) {
+      editorRef.current.insertYoutubeVideo(youtubeUrl);
+      setYoutubeUrl('');
+    }
+  };
 
   useEffect(() => {
     async function checkAuth() {
@@ -254,7 +265,32 @@ export default function AdminPage() {
 
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-[var(--gray-700)] uppercase tracking-wider">Nội dung</label>
+                    
+                    {/* Chèn Video YouTube */}
+                    <div className="p-3 bg-red-50 rounded-xl border border-red-100 mb-2">
+                      <div className="flex gap-2">
+                        <div className="flex-1 relative">
+                          <Youtube className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-red-500" />
+                          <input 
+                            type="text"
+                            value={youtubeUrl}
+                            onChange={(e) => setYoutubeUrl(e.target.value)}
+                            placeholder="Link YouTube..."
+                            className="w-full pl-8 pr-3 py-1.5 text-xs border border-red-200 rounded-lg focus:outline-none focus:border-red-500"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleInsertYoutube}
+                          className="bg-red-500 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-1 hover:bg-red-600 transition-all"
+                        >
+                          <Plus className="w-3 h-3" /> Chèn
+                        </button>
+                      </div>
+                    </div>
+
                     <Editor 
+                      ref={editorRef}
                       content={formData.content}
                       onChange={(html) => setFormData({...formData, content: html})}
                     />

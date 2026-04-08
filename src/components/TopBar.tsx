@@ -16,7 +16,7 @@ export default function TopBar() {
               <Mail className="w-3.5 h-3.5 text-[var(--accent)]" /> lienhe@tramytecaibau.vn
             </a>
             <span className="flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-[var(--accent)]" /> T2-T6: 7:00–17:00
+              <Clock className="w-3.5 h-3.5 text-[var(--accent)]" /> T2-T6: 7:30–16:30
             </span>
           </div>
           <div className="flex gap-4 items-center ml-auto md:ml-0">

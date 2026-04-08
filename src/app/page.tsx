@@ -37,7 +37,7 @@ export default function Home() {
             <Link href="/dich-vu-y-te" className="quick-item">
               <Stethoscope className="w-8 h-8 mx-auto mb-3 text-[var(--accent)]" />
               <h3 className="text-sm font-bold mb-1">Khám bệnh</h3>
-              <p className="text-[12px] opacity-75">T2–T6: 7:00–17:00</p>
+              <p className="text-[12px] opacity-75">T2-T6: 7:30–16:30</p>
             </Link>
             <Link href="/dich-vu-y-te" className="quick-item">
               <Syringe className="w-8 h-8 mx-auto mb-3 text-[var(--accent)]" />
