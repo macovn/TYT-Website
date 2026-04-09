@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { ChevronRight, Loader2, AlertCircle, Phone, Clock, MapPin } from 'lucide-react';
 import Link from 'next/link';
+import { sanitizeHtml } from '@/lib/utils';
 
 export default function PublicPage() {
   const [page, setPage] = useState<any>(null);
@@ -79,7 +80,7 @@ export default function PublicPage() {
               <div className="bg-white rounded-[32px] p-8 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-gray-100">
                 <div 
                   className="prose prose-lg max-w-none prose-headings:font-serif prose-headings:text-[var(--gray-800)] prose-p:text-[var(--gray-600)] prose-p:leading-relaxed prose-img:rounded-2xl"
-                  dangerouslySetInnerHTML={{ __html: page.content || '<p className="text-gray-400 italic">Nội dung đang được cập nhật...</p>' }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.content || '<p class="text-gray-400 italic">Nội dung đang được cập nhật...</p>') }}
                 />
               </div>
             </div>

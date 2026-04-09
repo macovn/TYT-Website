@@ -82,17 +82,6 @@ export default function AdminDashboard() {
     let mounted = true;
 
     async function fetchProfile(user: any) {
-      const ADMIN_EMAIL = "macovn@gmail.com";
-      
-      // Bypass for hardcoded admin
-      if (user.email === ADMIN_EMAIL) {
-        if (mounted) {
-          setRole('admin');
-          setLoading(false);
-        }
-        return;
-      }
-
       const { data } = await supabase
         .from('profiles')
         .select('role')
@@ -106,7 +95,7 @@ export default function AdminDashboard() {
             router.push('/');
           }
         } else {
-          // If profile not found and not hardcoded admin, block access
+          // If profile not found, block access
           router.push('/');
         }
         setLoading(false);
@@ -204,6 +193,7 @@ export default function AdminDashboard() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({
           email: newUser.email,
@@ -260,6 +250,7 @@ export default function AdminDashboard() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({ userId }),
       });

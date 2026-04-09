@@ -14,6 +14,8 @@ if (typeof window !== 'undefined') {
 }
 
 // Use placeholders only if keys are missing to avoid crash, but log error
+// TODO: For enhanced security against XSS, consider moving session management to HttpOnly cookies
+// instead of the default localStorage used by Supabase client.
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder.supabase.co',
   supabaseAnonKey || 'placeholder-key'

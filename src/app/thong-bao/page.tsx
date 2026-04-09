@@ -14,6 +14,7 @@ import {
   Loader2
 } from 'lucide-react';
 import Link from 'next/link';
+import { sanitizeHtml } from '@/lib/utils';
 
 export default function AnnouncementsPage() {
   const [announcements, setAnnouncements] = useState<any[]>([]);
@@ -137,7 +138,7 @@ export default function AnnouncementsPage() {
                           
                           <div 
                             className="text-gray-600 line-clamp-3 mb-6 prose prose-sm max-w-none"
-                            dangerouslySetInnerHTML={{ __html: a.content }}
+                            dangerouslySetInnerHTML={{ __html: sanitizeHtml(a.content) }}
                           />
                           
                           <Link 

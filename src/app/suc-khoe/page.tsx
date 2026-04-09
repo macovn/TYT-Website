@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Heart, ShieldCheck, Syringe, Baby, Apple, Users, Newspaper, Calendar, ArrowRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { slugify } from '@/lib/utils';
 
 const healthCats = [
   { name: "Phòng chống Dịch bệnh", icon: <ShieldCheck className="w-6 h-6" />, color: "bg-blue-50 text-blue-600", slug: "phong-dich" },
@@ -65,7 +66,7 @@ export default function HealthPage() {
               <div className="section-tag"><Heart className="w-4 h-4" /> Kiến thức mới nhất</div>
               <div className="grid gap-6">
                 {posts.slice(0, 4).map((post) => (
-                  <Link key={post.id} href={`/tin-tuc/${post.id}`} className="flex gap-4 bg-white p-4 rounded-2xl shadow-[var(--shadow)] border border-[var(--gray-100)] hover:shadow-[var(--shadow-lg)] transition-all">
+                  <Link key={post.id} href={`/tin-tuc/${post.slug || slugify(post.title)}`} className="flex gap-4 bg-white p-4 rounded-2xl shadow-[var(--shadow)] border border-[var(--gray-100)] hover:shadow-[var(--shadow-lg)] transition-all">
                     <div className="w-24 h-24 bg-[var(--primary-light)] rounded-xl shrink-0 flex items-center justify-center text-[var(--primary)]">
                       <Newspaper className="w-8 h-8" />
                     </div>

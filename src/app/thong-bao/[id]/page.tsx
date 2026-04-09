@@ -14,6 +14,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';
+import { sanitizeHtml } from '@/lib/utils';
 
 export default function AnnouncementDetailPage() {
   const [announcement, setAnnouncement] = useState<any>(null);
@@ -126,7 +127,7 @@ export default function AnnouncementDetailPage() {
           <div className="max-w-4xl mx-auto bg-white rounded-3xl p-8 md:p-12 shadow-sm border border-gray-100">
             <div 
               className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-600 prose-a:text-[var(--primary)] prose-img:rounded-2xl"
-              dangerouslySetInnerHTML={{ __html: announcement.content }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(announcement.content) }}
             />
           </div>
         </div>

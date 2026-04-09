@@ -36,30 +36,12 @@ export default function LoginPage() {
     // 2. CHECK ERROR
     if (error) {
       console.error("Login Error:", error);
-      
-      if (error.message.includes("API key")) {
-        setError("Lỗi: API Key không hợp lệ. Vui lòng kiểm tra lại NEXT_PUBLIC_SUPABASE_ANON_KEY trên Vercel.");
-      } else if (error.message === "Invalid login credentials") {
-        setError("Sai tài khoản hoặc mật khẩu");
-      } else if (error.message.includes("Email logins are disabled")) {
-        setError("Lỗi: Đăng nhập bằng Email đang bị tắt trong Supabase Dashboard. Vui lòng vào Authentication -> Providers -> Email và BẬT nó lên.");
-      } else {
-        setError(`Lỗi đăng nhập: ${error.message}`);
-      }
-      
+      setError("Sai tài khoản hoặc mật khẩu hoặc có lỗi xảy ra.");
       setLoading(false);
       return;
     }
 
     if (data.user) {
-      // ... existing success logic ...
-      // QUICK FIX: Hardcode admin email bypass (vẫn giữ để đảm bảo admin chính luôn vào được)
-      const ADMIN_EMAIL = "macovn@gmail.com";
-      if (data.user.email === ADMIN_EMAIL) {
-        router.push('/admin/dashboard');
-        return;
-      }
-
       // 3. LẤY ROLE
       const { data: profile } = await supabase
         .from('profiles')
@@ -68,37 +50,15 @@ export default function LoginPage() {
         .single();
       
       // 4. CHECK ROLE
-      if (!profile || profile.role === 'viewer') {
+      if (!profile || (profile.role !== 'admin' && profile.role !== 'editor')) {
         await supabase.auth.signOut();
-        setError("Không có quyền truy cập");
+        setError("Bạn không có quyền truy cập trang quản trị.");
         setLoading(false);
         return;
       }
 
       // 5. CHO VÀO ADMIN
       router.push('/admin/dashboard');
-    }
-  };
-
-  const handleInitializeAdmin = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch('/api/create-user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, role: 'admin' }),
-      });
-      const result = await response.json();
-      if (response.ok) {
-        setError("Đã khởi tạo Admin thành công! Vui lòng nhấn Đăng nhập lại.");
-      } else {
-        setError("Lỗi khởi tạo: " + result.error);
-      }
-    } catch (err: any) {
-      setError("Lỗi kết nối: " + err.message);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -116,35 +76,6 @@ export default function LoginPage() {
         {error && (
           <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-6 text-sm font-bold border border-red-100">
             {error}
-            {error.includes("cấu hình") && (
-              <div className="mt-2 text-[10px] font-normal opacity-80">
-                URL: {process.env.NEXT_PUBLIC_SUPABASE_URL || "Chưa có"}<br/>
-                Key: {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "Đã có" : "Chưa có"}
-              </div>
-            )}
-            {error === "Sai tài khoản hoặc mật khẩu" && email === "macovn@gmail.com" && (
-              <div className="mt-4 pt-4 border-t border-red-200">
-                <p className="text-[11px] font-normal mb-2">Nếu đây là lần đầu bạn sử dụng hệ thống này, hãy nhấn nút bên dưới để khởi tạo tài khoản Admin với email và mật khẩu bạn vừa nhập.</p>
-                <button 
-                  onClick={handleInitializeAdmin}
-                  className="w-full bg-red-600 text-white py-2 rounded-lg text-xs hover:bg-red-700 transition-all"
-                >
-                  Khởi tạo Admin
-                </button>
-              </div>
-            )}
-            {error?.includes("Email logins are disabled") && (
-              <div className="mt-4 pt-4 border-t border-red-200">
-                <p className="text-[11px] font-normal mb-2 text-red-700 font-bold">HƯỚNG DẪN CỐ ĐỊNH:</p>
-                <ol className="text-[10px] font-normal list-decimal pl-4 space-y-1 mt-1">
-                  <li>Vào <b>Supabase Dashboard</b></li>
-                  <li>Chọn dự án của bạn</li>
-                  <li>Vào <b>Authentication</b> {'>'} <b>Providers</b></li>
-                  <li>Tìm <b>Email</b> và đảm bảo nó đang ở trạng thái <b>Enabled</b></li>
-                  <li>Trong cùng trang đó, hãy TẮT <b>Confirm email</b> nếu bạn không muốn xác nhận qua mail.</li>
-                </ol>
-              </div>
-            )}
           </div>
         )}
 

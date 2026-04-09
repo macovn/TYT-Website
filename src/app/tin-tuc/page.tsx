@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Newspaper, Calendar, Eye, ChevronRight, Phone } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { stripHtml, extractFirstImage } from '@/lib/utils';
+import { stripHtml, extractFirstImage, slugify } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -62,7 +62,7 @@ export default function NewsPage() {
             <div className="lg:col-span-2 space-y-8">
               <div className="grid gap-6">
                 {posts.length > 0 ? posts.map((post) => (
-                  <Link key={post.id} href={`/tin-tuc/${post.id}`} className="flex flex-col md:flex-row bg-white rounded-[var(--radius-lg)] overflow-hidden shadow-[var(--shadow)] border border-[var(--gray-100)] transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-lg)]">
+                  <Link key={post.id} href={`/tin-tuc/${post.slug || slugify(post.title)}`} className="flex flex-col md:flex-row bg-white rounded-[var(--radius-lg)] overflow-hidden shadow-[var(--shadow)] border border-[var(--gray-100)] transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-lg)]">
                     <div className="md:w-64 shrink-0 bg-[var(--primary-light)] flex items-center justify-center text-[var(--primary)] h-48 md:h-auto overflow-hidden relative">
                       {(post.thumbnail || extractFirstImage(post.content)) ? (
                         <img 
@@ -133,7 +133,7 @@ export default function NewsPage() {
                       <div className={`w-6 h-6 rounded bg-[var(--primary)] text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5 ${i === 0 ? 'bg-[var(--accent)]' : ''}`}>
                         {i + 1}
                       </div>
-                      <Link href={`/tin-tuc/${post.id}`} className="text-[13.5px] font-semibold text-[var(--gray-700)] leading-snug group-hover:text-[var(--primary)] transition-colors line-clamp-2">
+                      <Link href={`/tin-tuc/${post.slug || slugify(post.title)}`} className="text-[13.5px] font-semibold text-[var(--gray-700)] leading-snug group-hover:text-[var(--primary)] transition-colors line-clamp-2">
                         {post.title}
                       </Link>
                     </li>
