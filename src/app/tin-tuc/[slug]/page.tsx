@@ -1,65 +1,85 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Calendar, User, Clock, Share2, Facebook, Twitter, Link as LinkIcon } from 'lucide-react';
-import { sanitizeHtml } from '@/lib/utils';
-
-// Mock data as requested
-const posts = [
-  {
-    slug: "kham-sang-loc-2026",
-    title: "Chiến dịch khám sàng lọc sức khỏe cộng đồng năm 2026",
-    content: `
-      <p>Nhằm nâng cao chất lượng chăm sóc sức khỏe cho người dân trên địa bàn xã Cái Bầu, Trạm Y tế phối hợp với Trung tâm Y tế huyện Vân Đồn tổ chức chiến dịch khám sàng lọc sức khỏe cộng đồng năm 2026.</p>
-      
-      <h3>1. Đối tượng tham gia</h3>
-      <p>Tất cả người dân có hộ khẩu thường trú hoặc tạm trú tại xã Cái Bầu, đặc biệt ưu tiên người cao tuổi, phụ nữ mang thai và trẻ em dưới 5 tuổi.</p>
-      
-      <h3>2. Nội dung khám</h3>
-      <ul>
-        <li>Khám tổng quát, đo huyết áp, nhịp tim.</li>
-        <li>Sàng lọc các bệnh mãn tính: Tiểu đường, tăng huyết áp.</li>
-        <li>Tư vấn dinh dưỡng và chế độ sinh hoạt lành mạnh.</li>
-        <li>Cấp phát thuốc miễn phí cho các đối tượng chính sách.</li>
-      </ul>
-      
-      <h3>3. Thời gian và địa điểm</h3>
-      <p><strong>Thời gian:</strong> Từ 7:30 đến 16:30, các ngày từ 15/04/2026 đến 20/04/2026.</p>
-      <p><strong>Địa điểm:</strong> Hội trường Trạm Y tế xã Cái Bầu.</p>
-      
-      <p>Kính mời toàn thể bà con nhân dân sắp xếp thời gian đến khám để đảm bảo sức khỏe cho bản thân và gia đình.</p>
-    `,
-    date: "2026-04-08",
-    author: "BS. Nguyễn Văn A",
-    category: "Thông báo"
-  },
-  {
-    slug: "huong-dan-phong-dich-mua-he",
-    title: "Hướng dẫn phòng chống dịch bệnh mùa hè cho trẻ em",
-    content: `
-      <p>Mùa hè là thời điểm các dịch bệnh như tay chân miệng, sốt xuất huyết và tiêu chảy mùa hè có xu hướng gia tăng. Để bảo vệ sức khỏe cho trẻ, phụ huynh cần lưu ý các biện pháp sau:</p>
-      
-      <h3>Vệ sinh cá nhân</h3>
-      <p>Rửa tay thường xuyên bằng xà phòng cho trẻ và người chăm sóc trẻ. Giữ gìn vệ sinh thân thể sạch sẽ.</p>
-      
-      <h3>Ăn chín uống sôi</h3>
-      <p>Đảm bảo thực phẩm tươi ngon, chế biến kỹ. Không cho trẻ ăn thức ăn ôi thiu hoặc chưa được nấu chín.</p>
-      
-      <h3>Diệt muỗi, lăng quăng</h3>
-      <p>Ngủ màn kể cả ban ngày. Thường xuyên kiểm tra và loại bỏ các vật dụng chứa nước đọng quanh nhà.</p>
-    `,
-    date: "2026-04-07",
-    author: "ĐD. Trần Thị B",
-    category: "Kiến thức"
-  }
-];
+import { ArrowLeft, Calendar, User, Clock, Share2, Facebook, Twitter, Link as LinkIcon, Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { sanitizeHtml, slugify } from '@/lib/utils';
 
 export default function PostDetailPage() {
   const params = useParams();
   const slug = params?.slug as string;
 
-  const post = posts.find(p => p.slug === slug);
+  const [post, setPost] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [relatedPosts, setRelatedPosts] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchPost() {
+      if (!slug) return;
+      setPost(null);
+      setLoading(true);
+      
+      try {
+        // 1. Try to fetch by ID if slug is a UUID
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+        
+        if (isUuid) {
+          const { data } = await supabase
+            .from('posts')
+            .select('*')
+            .eq('id', slug)
+            .single();
+          
+          if (data) {
+            setPost(data);
+            fetchRelated(data.id);
+            setLoading(false);
+            return;
+          }
+        }
+
+        // 2. Fetch all posts and match by slugified title (Resilient fallback)
+        const { data: allPosts } = await supabase
+          .from('posts')
+          .select('id, title, content, created_at, status, thumbnail, category');
+        
+        const found = allPosts?.find(p => slugify(p.title) === slug);
+        if (found) {
+          setPost(found);
+          fetchRelated(found.id);
+        }
+      } catch (err) {
+        console.error('Error in fetchPost:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    async function fetchRelated(currentId: string) {
+      const { data: related } = await supabase
+        .from('posts')
+        .select('id, title, created_at')
+        .neq('id', currentId)
+        .limit(5);
+      
+      if (related) {
+        setRelatedPosts(related);
+      }
+    }
+
+    fetchPost();
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 gap-4">
+        <Loader2 className="w-10 h-10 text-[var(--primary)] animate-spin" />
+        <p className="text-gray-500 font-medium">Đang tải bài viết...</p>
+      </div>
+    );
+  }
 
   if (!post) {
     return (
@@ -90,11 +110,11 @@ export default function PostDetailPage() {
           <div className="flex flex-wrap items-center gap-6 text-sm opacity-90">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-[var(--accent)]" />
-              {new Date(post.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+              {new Date(post.created_at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
             </div>
             <div className="flex items-center gap-2">
               <User className="w-4 h-4 text-[var(--accent)]" />
-              {post.author}
+              Trạm Y tế Cái Bầu
             </div>
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-[var(--accent)]" />
@@ -141,12 +161,12 @@ export default function PostDetailPage() {
             <div className="bg-white rounded-3xl p-6 shadow-lg border border-gray-100">
               <h3 className="text-lg font-bold text-gray-800 mb-4 pb-2 border-b-2 border-[var(--primary)] inline-block">Bài viết liên quan</h3>
               <div className="space-y-4">
-                {posts.filter(p => p.slug !== slug).map((p) => (
+                {relatedPosts.map((p) => (
                   <Link key={p.slug} href={`/tin-tuc/${p.slug}`} className="group block">
                     <h4 className="text-sm font-bold text-gray-700 group-hover:text-[var(--primary)] transition-colors line-clamp-2 mb-1">
                       {p.title}
                     </h4>
-                    <span className="text-xs text-gray-400">{new Date(p.date).toLocaleDateString('vi-VN')}</span>
+                    <span className="text-xs text-gray-400">{new Date(p.created_at).toLocaleDateString('vi-VN')}</span>
                   </Link>
                 ))}
               </div>

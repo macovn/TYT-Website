@@ -108,6 +108,7 @@ export default function EditPostPage() {
 
     try {
       const thumbnail = extractFirstImage(formData.content);
+      const slug = slugify(formData.title);
       const { error } = await supabase
         .from('posts')
         .update({

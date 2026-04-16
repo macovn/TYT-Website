@@ -132,6 +132,7 @@ export default function AdminDashboard() {
       console.log("SUPABASE URL (Admin):", process.env.NEXT_PUBLIC_SUPABASE_URL);
       console.log("START SUBMIT - Post Data:", newPost);
       const thumbnail = extractFirstImage(newPost.content);
+      const slug = slugify(newPost.title);
 
       const { data, error } = await supabase
         .from('posts')
