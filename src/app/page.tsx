@@ -5,6 +5,7 @@ import AnnouncementTicker from "@/components/AnnouncementTicker";
 import NewsSection from "@/components/NewsSection";
 import ServicesSection from "@/components/ServicesSection";
 import Link from "next/link";
+import Image from "next/image";
 import { Stethoscope, Syringe, Heart, Activity, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
@@ -82,10 +83,11 @@ export default function Home() {
                 <div key={i} className="bg-white rounded-[var(--radius-lg)] shadow-[var(--shadow)] border border-[var(--gray-100)] text-center p-6 transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-lg)]">
                   <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[var(--primary-light)] to-[var(--primary-mid)] mx-auto mb-4 flex items-center justify-center text-[var(--primary)] border-4 border-[var(--primary-light)] overflow-hidden relative">
                     {item.image_url ? (
-                      <img 
+                      <Image 
                         src={item.image_url} 
                         alt={item.name} 
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
                       />
                     ) : (
                       <span className="text-2xl font-bold">{item.name.split(' ').pop()?.[0]}</span>

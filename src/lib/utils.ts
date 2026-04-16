@@ -6,9 +6,8 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function stripHtml(html: string) {
-  if (typeof window === 'undefined') return html;
-  const doc = new DOMParser().parseFromString(html, 'text/html');
-  return doc.body.textContent || "";
+  if (!html) return "";
+  return html.replace(/<[^>]*>?/gm, '');
 }
 
 export function extractFirstImage(content: string) {
@@ -31,17 +30,22 @@ export function slugify(text: string) {
     .replace(/^-+|-+$/g, '');
 }
 
-export function sanitizeHtml(html: string) {
+export function sanitizeHtml(html: string | null | undefined) {
+  const content = html || "";
   if (typeof window !== 'undefined') {
+    // Client-side: use dompurify
     const DOMPurify = require('dompurify');
-    return DOMPurify.sanitize(html);
+    return DOMPurify.sanitize(content);
   } else {
-    // Use eval('require') to prevent webpack from bundling jsdom on the client
-    const req = eval('require');
-    const { JSDOM } = req('jsdom');
-    const createDOMPurify = req('dompurify');
-    const window = new JSDOM('').window;
-    const DOMPurify = createDOMPurify(window);
-    return DOMPurify.sanitize(html);
+    // Server-side: use sanitize-html
+    const sanitize = require('sanitize-html');
+    return sanitize(content, {
+      allowedTags: sanitize.defaults.allowedTags.concat(['img', 'iframe']),
+      allowedAttributes: {
+        ...sanitize.defaults.allowedAttributes,
+        img: ['src', 'alt', 'width', 'height', 'loading'],
+        iframe: ['src', 'width', 'height', 'frameborder', 'allowfullscreen', 'allow']
+      }
+    });
   }
 }

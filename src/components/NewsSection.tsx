@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Newspaper, ArrowRight, Calendar, Syringe, Apple, Heart } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { stripHtml, extractFirstImage, slugify } from '@/lib/utils';
@@ -44,10 +45,11 @@ export default function NewsSection() {
             <Link href={`/tin-tuc/${featuredPost.slug || slugify(featuredPost.title)}`} className="post-card group block">
               <div className="w-full aspect-[16/10] bg-gradient-to-br from-[var(--primary-light)] to-[var(--primary-mid)] flex items-center justify-center text-[var(--primary)] overflow-hidden relative">
                 {(featuredPost.thumbnail || extractFirstImage(featuredPost.content)) ? (
-                  <img 
+                  <Image 
                     src={featuredPost.thumbnail || extractFirstImage(featuredPost.content)!} 
                     alt={featuredPost.title} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                 ) : (
                   <Syringe className="w-16 h-16" />
@@ -79,10 +81,11 @@ export default function NewsSection() {
               <Link key={post.id} href={`/tin-tuc/${post.slug || slugify(post.title)}`} className="flex gap-3.5 bg-white rounded-[var(--radius)] p-3.5 shadow-[var(--shadow)] border border-[var(--gray-100)] hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 transition-all">
                 <div className="w-20 h-[72px] rounded-lg shrink-0 bg-[var(--primary-light)] flex items-center justify-center text-[var(--primary)] overflow-hidden relative">
                   {(post.thumbnail || extractFirstImage(post.content)) ? (
-                    <img 
+                    <Image 
                       src={post.thumbnail || extractFirstImage(post.content)!} 
                       alt={post.title} 
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
                     />
                   ) : (
                     <Newspaper className="w-7 h-7" />

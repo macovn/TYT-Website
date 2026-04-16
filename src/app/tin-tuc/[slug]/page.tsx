@@ -162,7 +162,7 @@ export default function PostDetailPage() {
               <h3 className="text-lg font-bold text-gray-800 mb-4 pb-2 border-b-2 border-[var(--primary)] inline-block">Bài viết liên quan</h3>
               <div className="space-y-4">
                 {relatedPosts.map((p) => (
-                  <Link key={p.slug} href={`/tin-tuc/${p.slug}`} className="group block">
+                  <Link key={p.id} href={`/tin-tuc/${p.id}`} className="group block">
                     <h4 className="text-sm font-bold text-gray-700 group-hover:text-[var(--primary)] transition-colors line-clamp-2 mb-1">
                       {p.title}
                     </h4>
