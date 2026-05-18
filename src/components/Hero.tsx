@@ -16,7 +16,7 @@ export default function Hero() {
               Chăm Sóc Sức Khỏe<br />Vì Cộng Đồng
             </h2>
             <p className="text-base opacity-90 leading-relaxed mb-7 max-w-lg">
-              Trạm Y tế Cái Bầu cung cấp dịch vụ chăm sóc sức khỏe ban đầu toàn diện cho người dân Đặc khu Vân Đồn và các vùng lân cận. Chúng tôi cam kết mang đến dịch vụ y tế chất lượng, tận tâm và miễn phí.
+              Trạm Y tế Cái Bầu cung cấp dịch vụ chăm sóc sức khỏe ban đầu toàn diện cho người dân Đặc khu Vân Đồn và các vùng lân cận. Chúng tôi cam kết mang đến dịch vụ y tế chất lượng và tận tâm.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link href="/dich-vu" className="btn-hero-primary">
@@ -29,7 +29,7 @@ export default function Hero() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="quick-item">
-              <div className="text-3xl font-extrabold text-[var(--accent)] mb-1">1.200+</div>
+              <div className="text-3xl font-extrabold text-[var(--accent)] mb-1">3.000+</div>
               <div className="text-[12.5px] opacity-85 font-medium">Lượt khám/tháng</div>
             </div>
             <div className="quick-item">
@@ -37,7 +37,7 @@ export default function Hero() {
               <div className="text-[12.5px] opacity-85 font-medium">Tỷ lệ tiêm chủng</div>
             </div>
             <div className="quick-item">
-              <div className="text-3xl font-extrabold text-[var(--accent)] mb-1">6</div>
+              <div className="text-3xl font-extrabold text-[var(--accent)] mb-1">60+</div>
               <div className="text-[12.5px] opacity-85 font-medium">Cán bộ y tế</div>
             </div>
             <div className="quick-item">

@@ -5,13 +5,14 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Newspaper, Calendar, Eye, ChevronRight, Phone } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { stripHtml, extractFirstImage, slugify } from '@/lib/utils';
+import { stripHtml, extractFirstImage, slugify, sanitizeHtml } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
 export default function NewsPage() {
   const [posts, setPosts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const fetchPosts = async () => {
     console.log("Fetching posts...");
@@ -63,7 +64,11 @@ export default function NewsPage() {
             <div className="lg:col-span-2 space-y-8">
               <div className="grid gap-6">
                 {posts.length > 0 ? posts.map((post) => (
-                  <Link key={post.id} href={`/tin-tuc/${post.slug || slugify(post.title)}`} className="flex flex-col md:flex-row bg-white rounded-[var(--radius-lg)] overflow-hidden shadow-[var(--shadow)] border border-[var(--gray-100)] transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-lg)]">
+                  <div 
+                    key={post.id} 
+                    onClick={() => setExpandedId(post.id === expandedId ? null : post.id)}
+                    className="flex flex-col md:flex-row bg-white rounded-[var(--radius-lg)] overflow-hidden shadow-[var(--shadow)] border border-[var(--gray-100)] transition-all hover:shadow-[var(--shadow-lg)] cursor-pointer"
+                  >
                     <div className="md:w-64 shrink-0 bg-[var(--primary-light)] flex items-center justify-center text-[var(--primary)] h-48 md:h-auto overflow-hidden relative">
                       {(post.thumbnail || extractFirstImage(post.content)) ? (
                         <Image 
@@ -91,11 +96,28 @@ export default function NewsPage() {
                       <h3 className="text-xl font-bold text-[var(--gray-800)] leading-tight mb-3 line-clamp-2">
                         {post.title}
                       </h3>
-                      <p className="text-[14px] text-[var(--gray-500)] leading-relaxed line-clamp-3">
-                        {post.excerpt || stripHtml(post.content || "").substring(0, 150)}
-                      </p>
+                      <div className={`text-[14px] text-[var(--gray-500)] leading-relaxed mb-4 ${expandedId === post.id ? '' : 'line-clamp-3'}`}>
+                        {expandedId === post.id ? (
+                          <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }} className="prose prose-sm max-w-none" />
+                        ) : (
+                          post.excerpt || stripHtml(post.content || "").substring(0, 150) + '...'
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center justify-between mt-auto">
+                        <Link 
+                          href={`/tin-tuc/${post.slug || slugify(post.title)}`} 
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-[14px] font-bold text-[var(--primary)] flex items-center gap-1 hover:gap-2 transition-all"
+                        >
+                          Xem bài viết đầy đủ <ChevronRight className="w-4 h-4" />
+                        </Link>
+                        <button className="text-[12px] font-bold text-[var(--gray-400)] hover:text-[var(--primary)] uppercase tracking-wider">
+                          {expandedId === post.id ? 'Thu gọn' : 'Xem nhanh'}
+                        </button>
+                      </div>
                     </div>
-                  </Link>
+                  </div>
                 )) : (
                   <div className="text-center py-12 text-[var(--gray-500)]">Đang tải tin tức...</div>
                 )}

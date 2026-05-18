@@ -43,6 +43,20 @@ export default function LoginPage() {
 
     if (data.user) {
       // 3. LẤY ROLE
+      const ADMIN_EMAIL = "macovn@gmail.com";
+      
+      if (data.user.email === ADMIN_EMAIL) {
+        // Tự động tạo/cập nhật profile nếu là admin chính
+        await supabase.from('profiles').upsert({
+          id: data.user.id,
+          email: data.user.email,
+          role: 'admin',
+          updated_at: new Date().toISOString()
+        });
+        router.push('/admin/dashboard');
+        return;
+      }
+
       const { data: profile } = await supabase
         .from('profiles')
         .select('role')

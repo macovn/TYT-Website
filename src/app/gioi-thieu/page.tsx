@@ -28,7 +28,7 @@ export default function AboutPage() {
                   Trạm Y tế Cái Bầu là cơ sở y tế cấp cơ sở thuộc hệ thống y tế nhà nước, trực thuộc Trung tâm Y tế Đặc khu Vân Đồn, tỉnh Quảng Ninh. Trạm được thành lập và đi vào hoạt động nhằm cung cấp dịch vụ chăm sóc sức khỏe ban đầu cho người dân trên địa bàn Đặc khu Vân Đồn.
                 </p>
                 <p>
-                  Với đội ngũ 6 cán bộ y tế có chuyên môn, trạm phục vụ trên 2.000 hộ dân với hơn 8.000 nhân khẩu. Trạm hoạt động theo nguyên tắc công bằng, hiệu quả và phát triển, lấy người dân làm trung tâm phục vụ.
+                  Với đội ngũ 60+ cán bộ y tế có chuyên môn, trạm phục vụ trên 2.000 hộ dân với hơn 8.000 nhân khẩu. Trạm hoạt động theo nguyên tắc công bằng, hiệu quả và phát triển, lấy người dân làm trung tâm phục vụ.
                 </p>
               </div>
 
@@ -68,7 +68,7 @@ export default function AboutPage() {
                     { label: "Trực thuộc", value: "TT Y tế Đặc khu Vân Đồn" },
                     { label: "Tỉnh/Thành", value: "Quảng Ninh" },
                     { label: "Trạm trưởng", value: "BS. Nguyễn Văn An" },
-                    { label: "Số cán bộ", value: "6 người" },
+                    { label: "Số cán bộ", value: "60+ người" },
                     { label: "Phân hạng", value: "Hạng IV" },
                   ].map((row, i) => (
                     <div key={i} className="flex justify-between py-3 text-[13.5px]">
@@ -89,7 +89,7 @@ export default function AboutPage() {
                     { label: "Buổi sáng", value: "7:00 – 11:30" },
                     { label: "Buổi chiều", value: "13:30 – 17:00" },
                     { label: "Thứ 7 – CN", value: "Nghỉ (cấp cứu 24/7)" },
-                    { label: "Tiêm chủng", value: "Thứ 4 hàng tuần" },
+                    { label: "Tiêm chủng", value: "Ngày 18, 24, 25: 7:30 – 11:00" },
                   ].map((row, i) => (
                     <div key={i} className="flex justify-between py-3 text-[13.5px]">
                       <span className="font-bold text-[var(--gray-800)]">{row.label}</span>

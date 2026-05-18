@@ -20,6 +20,7 @@ export default function AnnouncementsPage() {
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
@@ -116,7 +117,8 @@ export default function AnnouncementsPage() {
                   filteredAnnouncements.map((a, index) => (
                     <article 
                       key={a.id} 
-                      className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 hover:shadow-xl hover:border-[var(--primary)]/20 transition-all group animate-in fade-in slide-in-from-bottom-10 duration-500"
+                      onClick={() => setExpandedId(a.id === expandedId ? null : a.id)}
+                      className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 hover:shadow-xl hover:border-[var(--primary)]/20 transition-all group animate-in fade-in slide-in-from-bottom-10 duration-500 cursor-pointer"
                       style={{ animationDelay: `${index * 100}ms` }}
                     >
                       <div className="flex flex-col md:flex-row md:items-start gap-6">
@@ -137,17 +139,24 @@ export default function AnnouncementsPage() {
                           </h2>
                           
                           <div 
-                            className="text-gray-600 line-clamp-3 mb-6 prose prose-sm max-w-none"
+                            className={`text-gray-600 mb-6 prose prose-sm max-w-none transition-all duration-300 ${expandedId === a.id ? '' : 'line-clamp-3'}`}
                             dangerouslySetInnerHTML={{ __html: sanitizeHtml(a.content) }}
                           />
                           
-                          <Link 
-                            href={`/thong-bao/${a.id}`}
-                            className="inline-flex items-center gap-2 text-[var(--primary)] font-bold hover:gap-4 transition-all"
-                          >
-                            Xem chi tiết
-                            <ArrowRight size={18} />
-                          </Link>
+                          <div className="flex items-center justify-between">
+                            <Link 
+                              href={`/thong-bao/${a.id}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-flex items-center gap-2 text-[var(--primary)] font-bold hover:gap-4 transition-all"
+                            >
+                              Xem trang riêng
+                              <ArrowRight size={18} />
+                            </Link>
+
+                            <button className="text-[var(--primary)] text-sm font-bold hover:underline">
+                              {expandedId === a.id ? 'Thu gọn' : 'Xem nhanh'}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </article>

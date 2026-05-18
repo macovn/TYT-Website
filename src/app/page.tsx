@@ -43,12 +43,12 @@ export default function Home() {
             <Link href="/dich-vu-y-te" className="quick-item">
               <Syringe className="w-8 h-8 mx-auto mb-3 text-[var(--accent)]" />
               <h3 className="text-sm font-bold mb-1">Tiêm chủng</h3>
-              <p className="text-[12px] opacity-75">Thứ 4 hàng tuần</p>
+              <p className="text-[12px] opacity-75">Ngày 18, 24, 25 hàng tháng</p>
             </Link>
             <Link href="/suc-khoe" className="quick-item">
               <Heart className="w-8 h-8 mx-auto mb-3 text-[var(--accent)]" />
               <h3 className="text-sm font-bold mb-1">Tư vấn sức khỏe</h3>
-              <p className="text-[12px] opacity-75">Miễn phí cho người dân</p>
+              <p className="text-[12px] opacity-75">Tận tâm vì người dân</p>
             </Link>
               <Link href="/lien-he" className="quick-item">
                 <Activity className="w-8 h-8 mx-auto mb-3 text-[var(--accent)]" />

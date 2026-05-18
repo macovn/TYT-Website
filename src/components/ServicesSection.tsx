@@ -13,8 +13,8 @@ const services = [
   {
     name: "Tiêm chủng mở rộng",
     icon: <Syringe className="w-6 h-6" />,
-    desc: "Tiêm chủng đầy đủ các loại vaccine theo chương trình tiêm chủng mở rộng quốc gia, miễn phí.",
-    schedule: "Thứ 4 hàng tuần: 7:30–11:00"
+    desc: "Tiêm chủng đầy đủ các loại vaccine theo chương trình tiêm chủng mở rộng quốc gia.",
+    schedule: "Ngày 18, 24, 25: 7:30–11:00"
   },
   {
     name: "Quản lý bệnh mãn tính",

@@ -5,10 +5,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Newspaper, ArrowRight, Calendar, Syringe, Apple, Heart } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { stripHtml, extractFirstImage, slugify } from '@/lib/utils';
+import { stripHtml, extractFirstImage, slugify, sanitizeHtml } from '@/lib/utils';
 
 export default function NewsSection() {
   const [posts, setPosts] = useState<any[]>([]);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchPosts() {
@@ -42,7 +43,10 @@ export default function NewsSection() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {featuredPost ? (
-            <Link href={`/tin-tuc/${featuredPost.slug || slugify(featuredPost.title)}`} className="post-card group block">
+            <div 
+              onClick={() => setExpandedId(featuredPost.id === expandedId ? null : featuredPost.id)}
+              className="post-card group block cursor-pointer transition-all hover:shadow-[var(--shadow-lg)]"
+            >
               <div className="w-full aspect-[16/10] bg-gradient-to-br from-[var(--primary-light)] to-[var(--primary-mid)] flex items-center justify-center text-[var(--primary)] overflow-hidden relative">
                 {(featuredPost.thumbnail || extractFirstImage(featuredPost.content)) ? (
                   <Image 
@@ -67,42 +71,81 @@ export default function NewsSection() {
                 <h3 className="text-xl font-bold text-[var(--gray-800)] leading-tight mb-2.5 line-clamp-2 group-hover:text-[var(--primary)] transition-colors">
                   {featuredPost.title}
                 </h3>
-                <p className="text-[13.5px] text-[var(--gray-500)] leading-relaxed line-clamp-3">
-                  {featuredPost.excerpt || stripHtml(featuredPost.content || "").substring(0, 150)}
-                </p>
+                <div className={`text-[13.5px] text-[var(--gray-500)] leading-relaxed mb-4 ${expandedId === featuredPost.id ? '' : 'line-clamp-3'}`}>
+                   {expandedId === featuredPost.id ? (
+                      <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(featuredPost.content) }} className="prose prose-sm max-w-none" />
+                   ) : (
+                      featuredPost.excerpt || stripHtml(featuredPost.content || "").substring(0, 150) + '...'
+                   )}
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <Link 
+                    href={`/tin-tuc/${featuredPost.slug || slugify(featuredPost.title)}`} 
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-[14px] font-bold text-[var(--primary)] flex items-center gap-1 hover:gap-2 transition-all"
+                  >
+                    Đọc tiếp <ArrowRight className="w-4 h-4" />
+                  </Link>
+                  <button className="text-[12px] font-bold text-[var(--gray-400)]">
+                    {expandedId === featuredPost.id ? 'Thu gọn' : 'Xem nhanh'}
+                  </button>
+                </div>
               </div>
-            </Link>
+            </div>
           ) : (
             <div className="post-card animate-pulse bg-gray-100 h-[400px]"></div>
           )}
 
           <div className="flex flex-col gap-3">
             {otherPosts.map((post) => (
-              <Link key={post.id} href={`/tin-tuc/${post.slug || slugify(post.title)}`} className="flex gap-3.5 bg-white rounded-[var(--radius)] p-3.5 shadow-[var(--shadow)] border border-[var(--gray-100)] hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 transition-all">
-                <div className="w-20 h-[72px] rounded-lg shrink-0 bg-[var(--primary-light)] flex items-center justify-center text-[var(--primary)] overflow-hidden relative">
-                  {(post.thumbnail || extractFirstImage(post.content)) ? (
-                    <Image 
-                      src={post.thumbnail || extractFirstImage(post.content)!} 
-                      alt={post.title} 
-                      fill
-                      className="object-cover"
-                    />
-                  ) : (
-                    <Newspaper className="w-7 h-7" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[11px] font-bold text-[var(--green)] uppercase mb-1.5">
-                    {post.categories?.name || 'Hoạt động'}
+              <div 
+                key={post.id} 
+                onClick={() => setExpandedId(post.id === expandedId ? null : post.id)}
+                className="flex flex-col bg-white rounded-[var(--radius)] shadow-[var(--shadow)] border border-[var(--gray-100)] hover:shadow-[var(--shadow-lg)] transition-all cursor-pointer overflow-hidden"
+              >
+                <div className="flex gap-3.5 p-3.5">
+                  <div className="w-20 h-[72px] rounded-lg shrink-0 bg-[var(--primary-light)] flex items-center justify-center text-[var(--primary)] overflow-hidden relative">
+                    {(post.thumbnail || extractFirstImage(post.content)) ? (
+                      <Image 
+                        src={post.thumbnail || extractFirstImage(post.content)!} 
+                        alt={post.title} 
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <Newspaper className="w-7 h-7" />
+                    )}
                   </div>
-                  <h3 className="text-[13.5px] font-bold text-[var(--gray-800)] leading-snug line-clamp-2">
-                    {post.title}
-                  </h3>
-                  <div className="text-[12px] text-[var(--gray-500)] mt-1.5 flex items-center gap-1">
-                    <Calendar className="w-3 h-3" /> {new Date(post.created_at).toLocaleDateString('vi-VN')}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[11px] font-bold text-[var(--green)] uppercase mb-1.5">
+                      {post.categories?.name || 'Hoạt động'}
+                    </div>
+                    <h3 className="text-[13.5px] font-bold text-[var(--gray-800)] leading-snug line-clamp-2">
+                      {post.title}
+                    </h3>
+                    <div className="text-[12px] text-[var(--gray-500)] mt-1.5 flex items-center gap-1">
+                      <Calendar className="w-3 h-3" /> {new Date(post.created_at).toLocaleDateString('vi-VN')}
+                    </div>
                   </div>
                 </div>
-              </Link>
+                {expandedId === post.id && (
+                  <div className="px-4 pb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="h-px bg-gray-100 mb-4" />
+                    <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }} className="text-[13px] text-[var(--gray-600)] prose prose-sm max-w-none mb-4" />
+                    <div className="flex justify-between items-center">
+                      <Link 
+                        href={`/tin-tuc/${post.slug || slugify(post.title)}`} 
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-[12px] font-bold text-[var(--primary)]"
+                      >
+                        Đọc toàn bộ →
+                      </Link>
+                      <button className="text-[11px] text-gray-400 font-bold uppercase">Thu gọn</button>
+                    </div>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         </div>

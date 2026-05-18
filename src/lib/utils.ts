@@ -35,16 +35,49 @@ export function sanitizeHtml(html: string | null | undefined) {
   if (typeof window !== 'undefined') {
     // Client-side: use dompurify
     const DOMPurify = require('dompurify');
-    return DOMPurify.sanitize(content);
+    return DOMPurify.sanitize(content, {
+      ADD_TAGS: ['iframe', 'svg', 'path', 'polyline', 'div', 'span', 'embed', 'object'],
+      ADD_ATTR: ['target', 'data-pdf-link', 'style', 'class', 'download', 'data-pdf-block', 'data-src', 'data-filename', 'referrerpolicy', 'title', 'type']
+    });
   } else {
     // Server-side: use sanitize-html
     const sanitize = require('sanitize-html');
     return sanitize(content, {
-      allowedTags: sanitize.defaults.allowedTags.concat(['img', 'iframe']),
+      allowedTags: sanitize.defaults.allowedTags.concat(['img', 'iframe', 'svg', 'path', 'polyline', 'span', 'div', 'p', 'br', 'strong', 'em', 'u', 's', 'ol', 'ul', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote']),
       allowedAttributes: {
         ...sanitize.defaults.allowedAttributes,
         img: ['src', 'alt', 'width', 'height', 'loading'],
-        iframe: ['src', 'width', 'height', 'frameborder', 'allowfullscreen', 'allow']
+        iframe: ['src', 'width', 'height', 'style', 'frameborder', 'allowfullscreen', 'allow', 'referrerpolicy', 'title'],
+        a: ['href', 'name', 'target', 'class', 'data-pdf-link', 'style', 'download'],
+        span: ['class', 'style'],
+        div: ['class', 'style', 'data-pdf-block', 'data-src', 'data-filename'],
+        svg: ['xmlns', 'width', 'height', 'viewbox', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'style'],
+        path: ['d'],
+        polyline: ['points']
+      },
+      allowedStyles: {
+        '*': {
+          // Match all styles
+          'color': [/^.*$/],
+          'background': [/^.*$/],
+          'background-color': [/^.*$/],
+          'text-align': [/^.*$/],
+          'font-family': [/^.*$/],
+          'font-size': [/^.*$/],
+          'font-weight': [/^.*$/],
+          'display': [/^.*$/],
+          'width': [/^.*$/],
+          'height': [/^.*$/],
+          'border': [/^.*$/],
+          'border-radius': [/^.*$/],
+          'padding': [/^.*$/],
+          'margin': [/^.*$/],
+          'overflow': [/^.*$/],
+          'box-shadow': [/^.*$/],
+          'align-items': [/^.*$/],
+          'justify-content': [/^.*$/],
+          'gap': [/^.*$/]
+        }
       }
     });
   }

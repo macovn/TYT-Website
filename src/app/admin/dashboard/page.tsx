@@ -82,6 +82,21 @@ export default function AdminDashboard() {
     let mounted = true;
 
     async function fetchProfile(user: any) {
+      const ADMIN_EMAIL = "macovn@gmail.com";
+      
+      if (user.email === ADMIN_EMAIL) {
+        setRole('admin');
+        setLoading(false);
+        // Ensure profile exists in DB for this admin
+        await supabase.from('profiles').upsert({
+          id: user.id,
+          email: user.email,
+          role: 'admin',
+          updated_at: new Date().toISOString()
+        });
+        return;
+      }
+
       const { data } = await supabase
         .from('profiles')
         .select('role')

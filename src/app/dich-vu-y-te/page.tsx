@@ -48,7 +48,7 @@ export default function ServicesPage() {
       <div className="bg-gradient-to-br from-[var(--primary-dark)] to-[var(--primary)] py-14 text-white">
         <div className="container">
           <h1 className="text-4xl font-bold mb-3 font-serif">Dịch Vụ Y Tế</h1>
-          <p className="opacity-90 text-lg">Các dịch vụ chăm sóc sức khỏe miễn phí và chất lượng cho người dân</p>
+          <p className="opacity-90 text-lg">Các dịch vụ chăm sóc sức khỏe chất lượng cho người dân</p>
           <div className="flex items-center gap-2 text-sm opacity-75 mt-4">
             <Link href="/">Trang chủ</Link>
             <span className="opacity-50">/</span>

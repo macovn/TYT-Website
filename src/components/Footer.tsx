@@ -19,7 +19,7 @@ export default function Footer() {
               </div>
             </div>
             <p className="text-[13.5px] leading-relaxed mb-5">
-              Cung cấp dịch vụ chăm sóc sức khỏe ban đầu toàn diện, miễn phí và chất lượng cho người dân Đặc khu Vân Đồn và các vùng lân cận. Chúng tôi cam kết phục vụ cộng đồng với tinh thần tận tâm.
+              Cung cấp dịch vụ chăm sóc sức khỏe ban đầu toàn diện và chất lượng cho người dân Đặc khu Vân Đồn và các vùng lân cận. Chúng tôi cam kết phục vụ cộng đồng với tinh thần tận tâm.
             </p>
             <ul className="text-[13px] space-y-2">
               <li className="flex items-start gap-2.5">
