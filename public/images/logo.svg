@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#f0f9ff" />
+    </linearGradient>
+    <linearGradient id="primaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#0369a1" />
+    </linearGradient>
+    <linearGradient id="redCross" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ef4444" />
+      <stop offset="100%" stop-color="#dc2626" />
+    </linearGradient>
+    <linearGradient id="greenLeaf" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background Circle with elegant subtle shadow border -->
+  <circle cx="60" cy="60" r="56" fill="url(#bgGrad)" stroke="#e2e8f0" stroke-width="2" />
+  <circle cx="60" cy="60" r="52" fill="none" stroke="#38bdf8" stroke-width="2" stroke-dasharray="4 4" opacity="0.5" />
+
+  <!-- Medical Red Cross Centered at (60, 60) -->
+  <rect x="38" y="52" width="44" height="16" rx="4" fill="url(#redCross)" />
+  <rect x="52" y="38" width="16" height="44" rx="4" fill="url(#redCross)" />
+
+  <!-- Green leaf curve swooping from bottom left to top right -->
+  <path d="M28,88 C40,94 56,92 68,84 C82,74 88,54 88,36 C70,36 56,44 48,58 C42,46 32,40 24,44 C18,48 18,58 24,68 C28,74 24,82 28,88 Z" 
+        fill="url(#greenLeaf)" opacity="0.25" />
+
+  <path d="M28,88 C34,80 44,82 50,76 C56,70 54,60 62,54 C66,62 60,72 52,78 C44,84 34,84 28,88 Z" 
+        fill="url(#greenLeaf)" />
+  
+  <path d="M82,42 C74,48 70,58 72,68 C74,74 78,80 84,78 C90,76 92,68 90,60 C88,52 86,46 82,42 Z" 
+        fill="url(#greenLeaf)" opacity="0.8" />
+
+  <!-- Medical Star lines/shield curve in blue -->
+  <path d="M 18,60 A 42,42 0 0,0 102,60" fill="none" stroke="#0284c7" stroke-width="3" stroke-linecap="round" opacity="0.8" />
+  <path d="M 30,30 Q 60,18 90,30" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" opacity="0.6" />
+</svg>

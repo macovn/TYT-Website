@@ -236,7 +236,7 @@ export default function AdminPage() {
               <div className="bg-[var(--primary)] p-6 text-white">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-10 h-10 bg-white rounded-full p-1 shrink-0">
-                    <img src="/images/logo.png" alt="Logo" className="w-full h-full object-contain" />
+                    <img src="/images/logo.svg" alt="Logo" className="w-full h-full object-contain" />
                   </div>
                   <h1 className="text-xl font-bold">Thêm bài viết</h1>
                 </div>

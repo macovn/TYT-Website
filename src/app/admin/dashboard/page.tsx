@@ -299,7 +299,7 @@ export default function AdminDashboard() {
         <div className="p-6 border-b border-white/10 flex items-center gap-3">
           <div className="relative w-10 h-10 overflow-hidden rounded-full shrink-0 bg-white p-0.5">
             <img
-              src="/images/logo.png"
+              src="/images/logo.svg"
               alt="Logo"
               className="w-full h-full object-contain"
             />
