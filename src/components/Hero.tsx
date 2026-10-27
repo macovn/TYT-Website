@@ -72,7 +72,7 @@ export default function Hero() {
                 <Syringe className="w-5 h-5 text-[var(--primary)]" /> Tiêm chủng mở rộng
               </h3>
               <p className="text-[15px] text-[var(--gray-700)] leading-relaxed">
-                Ngày <strong>18, 24, 25</strong> hằng tháng (trừ Thứ 7, Chủ nhật).
+                Ngày <strong>18, 24, 25</strong> hằng tháng (trừ Thứ 7, Chủ nhật, ngày lễ, Tết).
               </p>
             </div>
 
