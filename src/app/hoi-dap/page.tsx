@@ -12,7 +12,7 @@ const faqs = [
   },
   {
     q: "Lịch tiêm chủng mở rộng hàng tháng diễn ra vào khi nào?",
-    a: "Lịch tiêm chủng mở rộng tại Trạm Y tế Cái Bầu thường diễn ra vào sáng thứ 4 hàng tuần. Tuy nhiên, lịch cụ thể có thể thay đổi tùy theo kế hoạch của Trung tâm Y tế huyện. Chúng tôi sẽ cập nhật thông báo cụ thể trên website và loa phát thanh xã trước mỗi đợt tiêm."
+    a: "Lịch tiêm chủng mở rộng tại Trạm Y tế Cái Bầu thường diễn ra vào sáng thứ 4 hàng tuần. Tuy nhiên, lịch cụ thể có thể thay đổi tùy theo kế hoạch của cơ quan y tế cấp trên. Chúng tôi sẽ cập nhật thông báo cụ thể trên website và hệ thống truyền thanh cơ sở trước mỗi đợt tiêm."
   },
   {
     q: "Trạm Y tế có khám bệnh vào ngày thứ 7 và Chủ nhật không?",
@@ -24,7 +24,7 @@ const faqs = [
   },
   {
     q: "Trạm Y tế có dịch vụ xét nghiệm máu không?",
-    a: "Hiện tại, Trạm Y tế Cái Bầu thực hiện được một số xét nghiệm nhanh cơ bản như xét nghiệm đường huyết, test nhanh HIV, test nhanh sốt xuất huyết. Đối với các xét nghiệm chuyên sâu hơn, trạm sẽ thực hiện lấy mẫu gửi lên tuyến trên hoặc hướng dẫn người bệnh đến Trung tâm Y tế huyện."
+    a: "Hiện tại, Trạm Y tế Cái Bầu thực hiện được một số xét nghiệm nhanh cơ bản như xét nghiệm đường huyết, test nhanh HIV, test nhanh sốt xuất huyết. Đối với các xét nghiệm chuyên sâu hơn, trạm sẽ thực hiện lấy mẫu gửi lên tuyến trên hoặc hướng dẫn người bệnh đến cơ sở y tế tuyến trên."
   }
 ];
 

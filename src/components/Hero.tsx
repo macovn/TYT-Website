@@ -10,7 +10,7 @@ export default function Hero() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="text-white">
             <div className="hero-badge">
-              <MapPin className="w-4 h-4 text-[var(--accent)]" /> Thôn Đông Hải – Đặc khu Vân Đồn – Quảng Ninh
+              <MapPin className="w-4 h-4 text-[var(--accent)]" /> Khu phố Đông Xá 3 – Đặc khu Vân Đồn – thành phố Quảng Ninh
             </div>
             <h2 className="text-4xl md:text-5xl font-bold leading-tight mb-4 font-serif">
               Chăm Sóc Sức Khỏe<br />Vì Cộng Đồng

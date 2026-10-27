@@ -66,7 +66,7 @@ export default function AnnouncementsPage() {
               <span className="text-[var(--accent)]">Tin tức mới nhất</span>
             </h1>
             <p className="text-lg md:text-xl text-white/80 max-w-2xl animate-in fade-in slide-in-from-bottom-8 duration-1000">
-              Cập nhật các thông tin quan trọng về lịch tiêm chủng, khám sức khỏe định kỳ và các hoạt động y tế tại xã Cái Bầu.
+              Cập nhật các thông tin quan trọng về lịch tiêm chủng, khám sức khỏe định kỳ và các hoạt động y tế tại Đặc khu Vân Đồn.
             </p>
           </div>
         </div>

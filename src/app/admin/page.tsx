@@ -163,8 +163,8 @@ export default function AdminPage() {
         views: Math.floor(Math.random() * 100)
       },
       {
-        title: 'Khám sức khỏe định kỳ cho người cao tuổi xã Cái Bầu',
-        content: 'Trong tuần tới, Trạm Y tế sẽ tổ chức đợt khám sức khỏe tổng quát, đo huyết áp và tư vấn dinh dưỡng miễn phí cho người cao tuổi trên địa bàn xã. Thời gian từ 7h30 đến 11h00 các ngày trong tuần.',
+        title: 'Khám sức khỏe định kỳ cho người cao tuổi Đặc khu Vân Đồn',
+        content: 'Trong tuần tới, Trạm Y tế sẽ tổ chức đợt khám sức khỏe tổng quát, đo huyết áp và tư vấn dinh dưỡng miễn phí cho người cao tuổi trên địa bàn Đặc khu Vân Đồn. Thời gian từ 7h30 đến 11h00 các ngày trong tuần.',
         status: 'published',
         views: Math.floor(Math.random() * 100)
       },

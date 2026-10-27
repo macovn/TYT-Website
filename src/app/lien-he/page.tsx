@@ -56,7 +56,7 @@ export default function ContactPage() {
             <div className="space-y-6">
               <div className="grid gap-4">
                 {[
-                  { icon: <MapPin />, label: "Địa chỉ", value: "Thôn Đông Hải, Đặc khu Vân Đồn, Tỉnh Quảng Ninh" },
+                  { icon: <MapPin />, label: "Địa chỉ", value: "Khu phố Đông Xá 3, Đặc khu Vân Đồn, thành phố Quảng Ninh" },
                   { icon: <Phone />, label: "Điện thoại", value: "0203.3795.898" },
                   { icon: <Activity className="text-[var(--red)]" />, label: "Đường dây cấp cứu", value: "0203.3822.115", highlight: true },
                   { icon: <Mail />, label: "Email", value: "lienhe@tramytecaibau.vn" },
@@ -80,7 +80,7 @@ export default function ContactPage() {
                 <div className="text-center">
                   <MapPin className="w-12 h-12 mx-auto mb-3 opacity-50 text-[var(--primary)]" />
                   <p className="font-bold text-[var(--gray-700)]">Bản đồ Trạm Y tế Cái Bầu</p>
-                  <p className="text-[13px]">Thôn Đông Hải, Đặc khu Vân Đồn, Quảng Ninh</p>
+                  <p className="text-[13px]">Khu phố Đông Xá 3, Đặc khu Vân Đồn, thành phố Quảng Ninh</p>
                   <a 
                     href="https://www.google.com/maps/search/Tr%E1%BA%A1m+Y+t%E1%BA%BF+C%C3%A1i+B%E1%BA%A7u+V%C3%A2n+%C4%90%E1%BB%93n" 
                     target="_blank" 
