@@ -33,14 +33,7 @@ const navLinks = [
   },
   { name: 'Sức khỏe', path: '/suc-khoe' },
   { name: 'Dịch vụ y tế', path: '/dich-vu-y-te' },
-  { 
-    name: 'Tài liệu', 
-    path: '/tai-lieu',
-    dropdown: [
-      { name: 'Tài liệu', path: '/tai-lieu' },
-      { name: 'Thư viện', path: '/thu-vien' },
-    ]
-  },
+  { name: 'KHCN - ĐMST', path: '/khcn-dmst' },
   { name: 'Hỏi đáp', path: '/hoi-dap' },
   { name: 'Liên hệ', path: '/lien-he' },
 ];
