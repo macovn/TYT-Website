@@ -27,7 +27,7 @@ cho thấy chưa đạt), `unresolved` (chưa có bằng chứng — không kế
 | 7 | Sau sửa: npx tsc --noEmit 0 lỗi | pass | TSC_EXIT=0 |
 | 7 | Sau sửa: npm run build đạt đủ 25 route | pass | "✓ Compiled successfully", "✓ Generating static pages (25/25)" — bằng baseline; bảng route đủ 28 dòng route như baseline (25 là số trang tĩnh), thêm dòng ƒ Middleware |
 | 7 | Tự rà soát diff theo 4 trục (đúng đắn, bảo mật, hiệu năng, bảo trì), kết quả ghi vào progress | pass | progress.md mục "Tự rà soát diff 4 trục" |
-| 8 | Nhánh dot-1/bao-mat-thong-tin đã push lên origin; git status sạch | unresolved | Chạy ở bước cuối |
+| 8 | Nhánh dot-1/bao-mat-thong-tin đã push lên origin; git status sạch | pass | `git push -u origin dot-1/bao-mat-thong-tin`: "* [new branch] dot-1/bao-mat-thong-tin -> dot-1/bao-mat-thong-tin"; `git status`: "nothing to commit, working tree clean"; 5 commit 669f4d1, 1d60dce, eddd6a0, 9e07472, 760edf5 (+ commit chốt hồ sơ này). KHÔNG mở PR theo hợp đồng WO |
 
 ## Nhật ký kiểm chứng
 

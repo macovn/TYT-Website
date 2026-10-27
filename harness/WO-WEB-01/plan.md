@@ -65,7 +65,7 @@
 
 ## Completion checklist (dựng từ CHECKS, chốt ở cổng cuối)
 
-- [ ] Mọi output tồn tại và mở được
-- [ ] Mọi check chạy thành công với phiên bản mới nhất
-- [ ] Mọi lỗi đã sửa hoặc đã báo cáo rõ ràng
-- [ ] Rules file có rule mới từ lần chạy này (hoặc ghi rõ: không có)
+- [x] Mọi output tồn tại và mở được
+- [x] Mọi check chạy thành công với phiên bản mới nhất
+- [x] Mọi lỗi đã sửa hoặc đã báo cáo rõ ràng
+- [x] Rules file có rule mới từ lần chạy này (hoặc ghi rõ: không có) — Không có; repo chưa có rules file, đã ghi đề xuất trong progress.md

@@ -6,7 +6,7 @@ này trước khi tiếp tục.
 ## Plan
 
 - Đã chọn / đã xong: Bước 0 (baseline), 1+4 (SQL: B1/B2/D + migration), 2 (middleware + admin layout + API routes), 3 (sanitize), 5 (dọn file rác), 6 (sửa thông tin đã rõ + grep mục chờ xác nhận), 7 (kiểm chứng cuối + tự rà soát diff).
-- Đang chạy: Bước 8 — commit và push nhánh.
+- Đã chọn / đã xong: Bước 8 — đã push nhánh `dot-1/bao-mat-thong-tin` lên origin (5 commit nội dung + commit hồ sơ), working tree sạch. WO hoàn tất ở cổng harness: toàn bộ checks pass (xem checks.md). Chưa mở PR, chưa gộp, chưa chạy migration, chưa deploy — chờ điều phối chính và Maco.
 - Bị chặn: Không.
 
 ## Outputs
