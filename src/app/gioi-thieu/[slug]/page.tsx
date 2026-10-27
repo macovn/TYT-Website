@@ -128,7 +128,7 @@ export default function PublicPage() {
                       <Clock className="w-5 h-5" />
                     </div>
                     <div>
-                      <div className="font-bold">Làm việc: 7:00 – 17:00</div>
+                      <div className="font-bold">Làm việc: 7:30 – 16:30</div>
                       <div className="text-[12px] opacity-70">Thứ 2 – Thứ 6 hàng tuần</div>
                     </div>
                   </div>

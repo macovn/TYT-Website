@@ -178,7 +178,7 @@ export default function AnnouncementsPage() {
                 </p>
                 <div className="bg-white/20 backdrop-blur-md p-4 rounded-2xl relative z-10">
                   <p className="text-sm font-medium text-white/70 mb-1">Hotline 24/7</p>
-                  <p className="text-2xl font-bold">0203.3858.123</p>
+                  <p className="text-2xl font-bold">0203.3822.115</p>
                 </div>
               </div>
 

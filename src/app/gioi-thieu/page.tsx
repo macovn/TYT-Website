@@ -67,7 +67,7 @@ export default function AboutPage() {
                     { label: "Tên đơn vị", value: "Trạm Y tế Cái Bầu" },
                     { label: "Trực thuộc", value: "UBND Đặc khu Vân Đồn" },
                     { label: "Tỉnh/Thành", value: "Quảng Ninh" },
-                    { label: "Trạm trưởng", value: "BS. Nguyễn Văn An" },
+                    { label: "Giám đốc", value: "Phạm Huy Cường" },
                     { label: "Số cán bộ", value: "60+ người" },
                     { label: "Phân hạng", value: "Hạng IV" },
                   ].map((row, i) => (
@@ -85,11 +85,11 @@ export default function AboutPage() {
                 </h4>
                 <div className="divide-y divide-[var(--gray-100)]">
                   {[
-                    { label: "Thứ 2 – Thứ 6", value: "7:00 – 17:00" },
-                    { label: "Buổi sáng", value: "7:00 – 11:30" },
-                    { label: "Buổi chiều", value: "13:30 – 17:00" },
+                    { label: "Thứ 2 – Thứ 6", value: "7:30 – 16:30" },
+                    { label: "Buổi sáng", value: "7:30 – 11:30" },
+                    { label: "Buổi chiều", value: "13:30 – 16:30" },
                     { label: "Thứ 7 – CN", value: "Nghỉ (cấp cứu 24/7)" },
-                    { label: "Tiêm chủng", value: "Ngày 18, 24, 25: 7:30 – 11:00" },
+                    { label: "Tiêm chủng", value: "Ngày 18, 24, 25: 7:30 – 11:00 (trừ T7, CN)" },
                   ].map((row, i) => (
                     <div key={i} className="flex justify-between py-3 text-[13.5px]">
                       <span className="font-bold text-[var(--gray-800)]">{row.label}</span>

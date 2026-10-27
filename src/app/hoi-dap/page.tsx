@@ -12,7 +12,7 @@ const faqs = [
   },
   {
     q: "Lịch tiêm chủng mở rộng hàng tháng diễn ra vào khi nào?",
-    a: "Lịch tiêm chủng mở rộng tại Trạm Y tế Cái Bầu thường diễn ra vào sáng thứ 4 hàng tuần. Tuy nhiên, lịch cụ thể có thể thay đổi tùy theo kế hoạch của cơ quan y tế cấp trên. Chúng tôi sẽ cập nhật thông báo cụ thể trên website và hệ thống truyền thanh cơ sở trước mỗi đợt tiêm."
+    a: "Lịch tiêm chủng mở rộng tại Trạm Y tế Cái Bầu cố định vào các ngày 18, 24 và 25 hằng tháng (trừ các ngày trùng Thứ 7, Chủ nhật). Trạm sẽ thông báo cụ thể trên website và hệ thống truyền thanh cơ sở trước mỗi đợt tiêm."
   },
   {
     q: "Trạm Y tế có khám bệnh vào ngày thứ 7 và Chủ nhật không?",

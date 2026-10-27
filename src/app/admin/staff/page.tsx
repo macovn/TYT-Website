@@ -262,7 +262,7 @@ export default function AdminStaff() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--primary)] transition-all"
-                  placeholder="Ví dụ: BS. Nguyễn Văn An" 
+                  placeholder="Ví dụ: Phạm Huy Cường" 
                 />
               </div>
 
@@ -274,7 +274,7 @@ export default function AdminStaff() {
                   value={position}
                   onChange={(e) => setPosition(e.target.value)}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--primary)] transition-all"
-                  placeholder="Ví dụ: Trạm trưởng" 
+                  placeholder="Ví dụ: Giám đốc" 
                 />
               </div>
 

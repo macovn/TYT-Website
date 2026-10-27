@@ -152,7 +152,7 @@ export default function AdminPage() {
     const examplePosts = [
       {
         title: 'Thông báo lịch tiêm chủng mở rộng tháng 4/2026',
-        content: 'Trạm Y tế Cái Bầu thông báo lịch tiêm chủng mở rộng cho trẻ em trong độ tuổi vào sáng thứ 4 hàng tuần. Kính mời các bậc phụ huynh đưa con em đến đúng giờ, mang theo sổ tiêm chủng và thẻ BHYT.',
+        content: 'Trạm Y tế Cái Bầu thông báo lịch tiêm chủng mở rộng cho trẻ em trong độ tuổi vào các ngày 18, 24 và 25 hằng tháng (trừ các ngày trùng Thứ 7, Chủ nhật). Kính mời các bậc phụ huynh đưa con em đến đúng giờ, mang theo sổ tiêm chủng và thẻ BHYT.',
         status: 'published',
         views: Math.floor(Math.random() * 100)
       },
