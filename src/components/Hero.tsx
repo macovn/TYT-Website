@@ -65,14 +65,6 @@ export default function Hero() {
                 <span>Thứ 2 – Thứ 6</span>
                 <strong className="text-[var(--gray-800)]">7:30 – 16:30</strong>
               </li>
-              <li className="flex justify-between gap-3">
-                <span className="text-[var(--gray-500)]">Buổi sáng / buổi chiều</span>
-                <span>7:30 – 11:30 / 13:30 – 16:30</span>
-              </li>
-              <li className="flex justify-between gap-3">
-                <span>Thứ 7 – Chủ nhật</span>
-                <span>Trực cấp cứu 24/7</span>
-              </li>
             </ul>
 
             <div className="border-t border-[var(--gray-200)] mt-5 pt-4">
@@ -80,13 +72,12 @@ export default function Hero() {
                 <Syringe className="w-5 h-5 text-[var(--primary)]" /> Tiêm chủng mở rộng
               </h3>
               <p className="text-[15px] text-[var(--gray-700)] leading-relaxed">
-                Ngày <strong>18, 24, 25</strong> hằng tháng (trừ Thứ 7, Chủ nhật),
-                buổi sáng 7:30 – 11:00.
+                Ngày <strong>18, 24, 25</strong> hằng tháng (trừ Thứ 7, Chủ nhật).
               </p>
             </div>
 
-            <div className="border-t border-[var(--gray-200)] mt-5 pt-4">
-              <div className="text-[13px] font-semibold uppercase tracking-wide text-[var(--gray-500)] mb-1">
+            <div className="border-t border-[var(--gray-200)] mt-5 pt-4 text-center">
+              <div className="text-[13px] font-semibold uppercase tracking-wide text-[var(--gray-500)] mb-1.5">
                 Trực cấp cứu 24/7
               </div>
               <a
