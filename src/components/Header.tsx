@@ -56,7 +56,7 @@ export default function Header() {
           <Link href="/" className="flex items-center gap-3">
             <div className="relative w-8 h-8 md:w-10 md:h-10 lg:w-11 lg:h-11 overflow-hidden rounded-full shrink-0 border border-gray-100 shadow-sm">
               <Image
-                src="/images/logo.svg"
+                src="/images/logo-tram.svg"
                 alt="Trạm Y tế Cái Bầu"
                 fill
                 className="object-contain p-0.5"
