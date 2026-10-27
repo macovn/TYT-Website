@@ -24,7 +24,7 @@ const navLinks = [
     ]
   },
   { 
-    name: 'Tin tức & Thông báo', 
+    name: 'Tin tức', 
     path: '/tin-tuc',
     dropdown: [
       { name: 'Tin tức', path: '/tin-tuc' },
@@ -34,7 +34,7 @@ const navLinks = [
   { name: 'Sức khỏe', path: '/suc-khoe' },
   { name: 'Dịch vụ y tế', path: '/dich-vu-y-te' },
   { 
-    name: 'Tài liệu & Thư viện', 
+    name: 'Tài liệu', 
     path: '/tai-lieu',
     dropdown: [
       { name: 'Tài liệu', path: '/tai-lieu' },
@@ -52,9 +52,9 @@ export default function Header() {
   return (
     <header className="header">
       <div className="container">
-        <div className="flex items-center justify-between py-3.5 gap-5">
-          <Link href="/" className="flex items-center gap-3.5">
-            <div className="relative w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 overflow-hidden rounded-full shrink-0 border border-gray-100 shadow-sm">
+        <div className="flex items-center justify-between py-2.5 gap-4">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="relative w-8 h-8 md:w-10 md:h-10 lg:w-11 lg:h-11 overflow-hidden rounded-full shrink-0 border border-gray-100 shadow-sm">
               <Image
                 src="/images/logo.svg"
                 alt="Trạm Y tế Cái Bầu"
@@ -63,7 +63,7 @@ export default function Header() {
               />
             </div>
             <div className="logo-text">
-              <h1 className="text-[17px] font-extrabold text-[var(--primary-dark)] leading-tight tracking-tight">
+              <h1 className="text-[16px] font-extrabold text-[var(--primary-dark)] leading-tight tracking-tight">
                 TRẠM Y TẾ CÁI BẦU
               </h1>
               <p className="text-[12px] text-[var(--gray-500)] font-normal leading-tight">
@@ -78,7 +78,7 @@ export default function Header() {
                 <Link
                   href={link.path}
                   className={cn(
-                    "flex items-center gap-1 px-3.5 py-2.5 text-[13.5px] font-semibold text-[var(--gray-700)] rounded-lg transition-all hover:bg-[var(--primary-light)] hover:text-[var(--primary)]",
+                    "flex items-center gap-1 px-3 py-2 text-[13.5px] font-semibold whitespace-nowrap text-[var(--gray-700)] rounded-lg transition-all hover:bg-[var(--primary-light)] hover:text-[var(--primary)]",
                     pathname === link.path && "bg-[var(--primary-light)] text-[var(--primary)]"
                   )}
                 >
