@@ -10,11 +10,16 @@ import { Stethoscope, Syringe, Heart, Activity, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
+// Tạm ẩn mục Đội ngũ trên trang chủ theo yêu cầu của Maco (27/10/2026).
+// Đổi thành true để hiện lại, dữ liệu vẫn lấy từ bảng staff như cũ.
+const HIEN_DOI_NGU = false;
+
 export default function Home() {
   const [staff, setStaff] = useState<any[]>([]);
   const [loadingStaff, setLoadingStaff] = useState(true);
 
   useEffect(() => {
+    if (!HIEN_DOI_NGU) { setLoadingStaff(false); return; }
     async function fetchStaff() {
       const { data } = await supabase
         .from('staff')
@@ -63,6 +68,7 @@ export default function Home() {
       <ServicesSection />
 
       {/* STAFF SECTION */}
+      {HIEN_DOI_NGU && (
       <section className="py-14">
         <div className="container">
           <div className="text-center mb-9">
@@ -104,6 +110,7 @@ export default function Home() {
           )}
         </div>
       </section>
+      )}
     </>
   );
 }
