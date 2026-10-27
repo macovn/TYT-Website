@@ -64,9 +64,6 @@ export default function ServicesSection() {
               </div>
               <h3 className="text-[16px] font-bold text-[var(--gray-800)] mb-2">{service.name}</h3>
               <p className="text-[14px] text-[var(--gray-600)] leading-[1.7] mb-3">{service.desc}</p>
-              <div className="flex items-center gap-1.5 text-[13.5px] font-medium text-[var(--gray-700)]">
-                <Clock className="w-4 h-4 text-[var(--primary)] shrink-0" /> {service.schedule}
-              </div>
             </div>
           ))}
         </div>
