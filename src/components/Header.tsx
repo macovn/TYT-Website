@@ -78,7 +78,7 @@ export default function Header() {
                 <Link
                   href={link.path}
                   className={cn(
-                    "flex items-center gap-1 px-3 py-2 text-[13.5px] font-semibold whitespace-nowrap text-[var(--gray-700)] rounded-lg transition-all hover:bg-[var(--primary-light)] hover:text-[var(--primary)]",
+                    "flex items-center gap-1 px-3 py-2 text-[14.5px] font-semibold whitespace-nowrap text-[var(--gray-700)] rounded-md transition-all hover:bg-[var(--primary-light)] hover:text-[var(--primary)]",
                     pathname === link.path && "bg-[var(--primary-light)] text-[var(--primary)]"
                   )}
                 >
@@ -92,7 +92,7 @@ export default function Header() {
                       <Link
                         key={item.name}
                         href={item.path}
-                        className="block px-4.5 py-2.5 text-[13.5px] font-medium text-[var(--gray-700)] border-b border-[var(--gray-50)] last:border-0 hover:bg-[var(--primary-light)] hover:text-[var(--primary)] hover:pl-6 transition-all"
+                        className="block px-4.5 py-2.5 text-[14px] font-medium text-[var(--gray-700)] border-b border-[var(--gray-50)] last:border-0 hover:bg-[var(--primary-light)] hover:text-[var(--primary)] hover:pl-6 transition-all"
                       >
                         {item.name}
                       </Link>

@@ -36,24 +36,24 @@ export default function Home() {
         <div className="container">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
             <Link href="/dich-vu-y-te" className="quick-item">
-              <Stethoscope className="w-8 h-8 mx-auto mb-3 text-[var(--accent)]" />
-              <h3 className="text-sm font-bold mb-1">Khám bệnh</h3>
-              <p className="text-[12px] opacity-75">T2-T6: 7:30–16:30</p>
+              <Stethoscope className="w-8 h-8 mx-auto mb-3 text-[var(--primary)]" />
+              <h3 className="text-[15px] font-bold mb-1">Khám bệnh</h3>
+              <p className="text-[13px] text-[var(--gray-600)]">T2-T6: 7:30–16:30</p>
             </Link>
             <Link href="/dich-vu-y-te" className="quick-item">
-              <Syringe className="w-8 h-8 mx-auto mb-3 text-[var(--accent)]" />
-              <h3 className="text-sm font-bold mb-1">Tiêm chủng</h3>
-              <p className="text-[12px] opacity-75">Ngày 18, 24, 25 hàng tháng</p>
+              <Syringe className="w-8 h-8 mx-auto mb-3 text-[var(--primary)]" />
+              <h3 className="text-[15px] font-bold mb-1">Tiêm chủng</h3>
+              <p className="text-[13px] text-[var(--gray-600)]">Ngày 18, 24, 25 hàng tháng</p>
             </Link>
             <Link href="/suc-khoe" className="quick-item">
-              <Heart className="w-8 h-8 mx-auto mb-3 text-[var(--accent)]" />
-              <h3 className="text-sm font-bold mb-1">Tư vấn sức khỏe</h3>
-              <p className="text-[12px] opacity-75">Tận tâm vì người dân</p>
+              <Heart className="w-8 h-8 mx-auto mb-3 text-[var(--primary)]" />
+              <h3 className="text-[15px] font-bold mb-1">Tư vấn sức khỏe</h3>
+              <p className="text-[13px] text-[var(--gray-600)]">Tận tâm vì người dân</p>
             </Link>
               <Link href="/lien-he" className="quick-item">
-                <Activity className="w-8 h-8 mx-auto mb-3 text-[var(--accent)]" />
-                <h3 className="text-sm font-bold mb-1">Cấp cứu 24/7</h3>
-                <p className="text-[12px] opacity-75">Gọi ngay: 0203.3822.115</p>
+                <Activity className="w-8 h-8 mx-auto mb-3 text-[var(--primary)]" />
+                <h3 className="text-[15px] font-bold mb-1">Cấp cứu 24/7</h3>
+                <p className="text-[13px] text-[var(--gray-600)]">Gọi ngay: 0203.3822.115</p>
               </Link>
           </div>
         </div>
@@ -80,8 +80,8 @@ export default function Home() {
           ) : staff.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {staff.map((item, i) => (
-                <div key={i} className="bg-white rounded-[var(--radius-lg)] shadow-[var(--shadow)] border border-[var(--gray-100)] text-center p-6 transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-lg)]">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[var(--primary-light)] to-[var(--primary-mid)] mx-auto mb-4 flex items-center justify-center text-[var(--primary)] border-4 border-[var(--primary-light)] overflow-hidden relative">
+                <div key={i} className="bg-white rounded-[var(--radius-lg)] shadow-[var(--shadow)] border border-[var(--gray-100)] text-center p-6">
+                  <div className="w-20 h-20 rounded-full bg-[var(--primary-light)] mx-auto mb-4 flex items-center justify-center text-[var(--primary)] border-4 border-[var(--primary-light)] overflow-hidden relative">
                     {item.image_url ? (
                       <Image 
                         src={item.image_url} 

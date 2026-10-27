@@ -59,11 +59,14 @@ export default function ServicesSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {services.map((service, i) => (
             <div key={i} className="service-card group">
-              <div className="w-[52px] h-[52px] bg-[var(--primary-light)] rounded-[14px] flex items-center justify-center mb-4 text-[var(--primary)] group-hover:bg-[var(--primary)] group-hover:text-white transition-all">
+              <div className="w-[52px] h-[52px] bg-[var(--primary-light)] rounded-[8px] flex items-center justify-center mb-4 text-[var(--primary)]">
                 {service.icon}
               </div>
-              <h3 className="text-[15px] font-bold text-[var(--gray-800)] mb-2">{service.name}</h3>
-              <p className="text-[13px] text-[var(--gray-500)] leading-[1.7] mb-3">{service.desc}</p>
+              <h3 className="text-[16px] font-bold text-[var(--gray-800)] mb-2">{service.name}</h3>
+              <p className="text-[14px] text-[var(--gray-600)] leading-[1.7] mb-3">{service.desc}</p>
+              <div className="flex items-center gap-1.5 text-[13.5px] font-medium text-[var(--gray-700)]">
+                <Clock className="w-4 h-4 text-[var(--primary)] shrink-0" /> {service.schedule}
+              </div>
             </div>
           ))}
         </div>

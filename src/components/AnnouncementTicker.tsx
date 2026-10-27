@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Megaphone, Loader2 } from 'lucide-react';
+import { Megaphone } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 
@@ -34,24 +34,25 @@ export default function AnnouncementTicker() {
 
   return (
     <div className="announcement-bar">
-      <div className="container !px-0">
-        <div className="flex items-stretch">
-          <div className="bg-[var(--accent)] text-white px-5 py-3 font-bold text-[13px] flex items-center gap-2 whitespace-nowrap shrink-0">
+      <div className="container">
+        <div className="flex items-center gap-4 py-3 flex-wrap">
+          <div className="bg-[var(--primary-dark)] text-white px-3 py-1.5 rounded font-bold text-[12.5px] flex items-center gap-2 whitespace-nowrap shrink-0">
             <Megaphone className="w-4 h-4" /> THÔNG BÁO
           </div>
-          <div className="flex-1 overflow-hidden py-3 px-4">
-            <div className="flex gap-10 ticker-animation whitespace-nowrap hover:[animation-play-state:paused]">
-              {[...announcements, ...announcements].map((item, i) => (
-                <Link 
-                  key={i} 
-                  href={`/thong-bao/${item.id}`}
-                  className="inline-flex items-center gap-2 text-[13.5px] font-medium text-[var(--gray-700)] hover:text-[var(--primary)] transition-colors"
-                >
-                  <span className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full"></span> {item.title}
-                </Link>
-              ))}
-            </div>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-8">
+            {announcements.slice(0, 2).map((item) => (
+              <Link
+                key={item.id}
+                href={`/thong-bao/${item.id}`}
+                className="text-[14.5px] font-medium text-[var(--gray-800)] hover:text-[var(--primary)] transition-colors"
+              >
+                {item.title}
+              </Link>
+            ))}
           </div>
+          <Link href="/thong-bao" className="ml-auto text-[13.5px] font-semibold text-[var(--primary)] hover:underline whitespace-nowrap">
+            Xem tất cả
+          </Link>
         </div>
       </div>
     </div>
