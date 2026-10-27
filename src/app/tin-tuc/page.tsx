@@ -20,7 +20,8 @@ export default function NewsPage() {
       .from('posts')
       .select('*')
       .eq('category', 'news')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(3);
 
     console.log("POSTS:", data, error);
 
@@ -152,7 +153,7 @@ export default function NewsPage() {
               <div className="bg-white rounded-[var(--radius-lg)] p-6 shadow-[var(--shadow)]">
                 <h3 className="text-lg font-bold text-[var(--gray-800)] mb-4 pb-2 border-b-2 border-[var(--primary)] inline-block">Bài viết xem nhiều</h3>
                 <ul className="space-y-4">
-                  {posts.slice(0, 5).map((post, i) => (
+                  {posts.slice(0, 3).map((post, i) => (
                     <li key={post.id} className="flex gap-3 items-start group">
                       <div className={`w-6 h-6 rounded bg-[var(--primary)] text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5 ${i === 0 ? 'bg-[var(--accent)]' : ''}`}>
                         {i + 1}
