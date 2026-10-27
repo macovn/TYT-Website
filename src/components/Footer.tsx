@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { MapPin, Phone, Mail, Clock, ChevronRight, Facebook } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, ChevronRight, Facebook, Youtube } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -49,6 +49,16 @@ export default function Footer() {
                   className="w-10 h-10 rounded-full bg-white text-[var(--primary-dark)] flex items-center justify-center hover:bg-[var(--primary-light)] transition-colors"
                 >
                   <Facebook className="w-5 h-5" />
+                </a>
+                <a
+                  href="https://www.youtube.com/@TramYTeCaiBau"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Kênh YouTube Trạm Y tế Cái Bầu"
+                  title="Kênh YouTube Trạm Y tế Cái Bầu"
+                  className="w-10 h-10 rounded-full bg-white text-[var(--primary-dark)] flex items-center justify-center hover:bg-[var(--primary-light)] transition-colors"
+                >
+                  <Youtube className="w-5 h-5" />
                 </a>
               </div>
             </div>
