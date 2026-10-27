@@ -137,7 +137,7 @@ export default function PublicPage() {
                       <MapPin className="w-5 h-5" />
                     </div>
                     <div className="text-[13px] leading-relaxed opacity-90">
-                      Thôn Đông Hải, Đặc khu Vân Đồn, Tỉnh Quảng Ninh
+                      Khu phố Đông Xá 3, Đặc khu Vân Đồn, thành phố Quảng Ninh
                     </div>
                   </div>
                 </div>

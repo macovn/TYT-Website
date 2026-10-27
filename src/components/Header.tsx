@@ -67,7 +67,7 @@ export default function Header() {
                 TRẠM Y TẾ CÁI BẦU
               </h1>
               <p className="text-[12px] text-[var(--gray-500)] font-normal leading-tight">
-                Đặc khu Vân Đồn – Tỉnh Quảng Ninh
+                Đặc khu Vân Đồn – thành phố Quảng Ninh
               </p>
             </div>
           </Link>

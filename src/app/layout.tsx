@@ -19,7 +19,7 @@ const playfairDisplay = Playfair_Display({
 
 export const metadata: Metadata = {
   title: "Trạm Y tế Cái Bầu – Đặc khu Vân Đồn – Quảng Ninh",
-  description: "Trạm Y tế Cái Bầu - Đặc khu Vân Đồn, Tỉnh Quảng Ninh. Cung cấp dịch vụ chăm sóc sức khỏe ban đầu cho cộng đồng.",
+  description: "Trạm Y tế Cái Bầu - Đặc khu Vân Đồn, thành phố Quảng Ninh. Cung cấp dịch vụ chăm sóc sức khỏe ban đầu cho cộng đồng.",
 };
 
 export default function RootLayout({

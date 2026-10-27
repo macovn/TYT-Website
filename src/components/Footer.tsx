@@ -24,7 +24,7 @@ export default function Footer() {
             <ul className="text-[13px] space-y-2">
               <li className="flex items-start gap-2.5">
                 <MapPin className="w-4 h-4 text-[var(--accent)] shrink-0 mt-0.5" />
-                <span>Thôn Đông Hải, Đặc khu Vân Đồn, Tỉnh Quảng Ninh</span>
+                <span>Khu phố Đông Xá 3, Đặc khu Vân Đồn, thành phố Quảng Ninh</span>
               </li>
               <li className="flex items-start gap-2.5">
                 <Phone className="w-4 h-4 text-[var(--accent)] shrink-0 mt-0.5" />
@@ -74,7 +74,7 @@ export default function Footer() {
       <div className="bg-black/20 py-4.5 mt-0">
         <div className="container">
           <div className="flex flex-wrap justify-between items-center gap-2 text-[12.5px] py-4">
-            <span>© 2026 Trạm Y tế Cái Bầu – Đặc khu Vân Đồn – Tỉnh Quảng Ninh</span>
+            <span>© 2026 Trạm Y tế Cái Bầu – Đặc khu Vân Đồn – thành phố Quảng Ninh</span>
             <span>Thiết kế bởi: <span className="text-[var(--accent)]">Trương Thái Nguyên</span></span>
           </div>
         </div>

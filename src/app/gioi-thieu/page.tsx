@@ -25,7 +25,7 @@ export default function AboutPage() {
               </div>
               <div className="space-y-4 text-[var(--gray-600)] leading-relaxed">
                 <p>
-                  Trạm Y tế Cái Bầu là cơ sở y tế cấp cơ sở thuộc hệ thống y tế nhà nước, trực thuộc Trung tâm Y tế Đặc khu Vân Đồn, tỉnh Quảng Ninh. Trạm được thành lập và đi vào hoạt động nhằm cung cấp dịch vụ chăm sóc sức khỏe ban đầu cho người dân trên địa bàn Đặc khu Vân Đồn.
+                  Trạm Y tế Cái Bầu là cơ sở y tế cấp cơ sở thuộc hệ thống y tế nhà nước, trực thuộc Ủy ban nhân dân Đặc khu Vân Đồn, thành phố Quảng Ninh. Trạm được thành lập và đi vào hoạt động nhằm cung cấp dịch vụ chăm sóc sức khỏe ban đầu cho người dân trên địa bàn Đặc khu Vân Đồn.
                 </p>
                 <p>
                   Với đội ngũ 60+ cán bộ y tế có chuyên môn, trạm phục vụ trên 2.000 hộ dân với hơn 8.000 nhân khẩu. Trạm hoạt động theo nguyên tắc công bằng, hiệu quả và phát triển, lấy người dân làm trung tâm phục vụ.
@@ -65,7 +65,7 @@ export default function AboutPage() {
                 <div className="divide-y divide-[var(--gray-100)]">
                   {[
                     { label: "Tên đơn vị", value: "Trạm Y tế Cái Bầu" },
-                    { label: "Trực thuộc", value: "TT Y tế Đặc khu Vân Đồn" },
+                    { label: "Trực thuộc", value: "UBND Đặc khu Vân Đồn" },
                     { label: "Tỉnh/Thành", value: "Quảng Ninh" },
                     { label: "Trạm trưởng", value: "BS. Nguyễn Văn An" },
                     { label: "Số cán bộ", value: "60+ người" },
