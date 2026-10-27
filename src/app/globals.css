@@ -57,6 +57,11 @@ a {
   padding: 0 20px;
 }
 
+/* Header dùng khung rộng hơn để menu một hàng không vỡ dòng */
+.header .container {
+  max-width: 1440px;
+}
+
 /* ─── TOP BAR ─── */
 .top-bar {
   background: var(--primary-dark);
