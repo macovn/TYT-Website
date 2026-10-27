@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { MapPin, Phone, Mail, Clock, ChevronRight } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, ChevronRight, Facebook } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -19,9 +19,6 @@ export default function Footer() {
                 <p className="text-[12px] opacity-60">Đặc khu Vân Đồn – Quảng Ninh</p>
               </div>
             </div>
-            <p className="text-[13.5px] leading-relaxed mb-5">
-              Cung cấp dịch vụ chăm sóc sức khỏe ban đầu toàn diện và chất lượng cho người dân Đặc khu Vân Đồn và các vùng lân cận. Chúng tôi cam kết phục vụ cộng đồng với tinh thần tận tâm.
-            </p>
             <ul className="text-[13px] space-y-2">
               <li className="flex items-start gap-2.5">
                 <MapPin className="w-4 h-4 text-[#9FD8C9] shrink-0 mt-0.5" />
@@ -40,6 +37,21 @@ export default function Footer() {
                 <span>T2-T6: 7:30–16:30 | Cấp cứu: 24/7</span>
               </li>
             </ul>
+            <div className="mt-6">
+              <div className="text-[14px] font-bold text-white mb-3">Theo dõi Trạm Y tế Cái Bầu</div>
+              <div className="flex items-center gap-2.5">
+                <a
+                  href="https://www.facebook.com/tramytecaibau"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Fanpage Facebook Trạm Y tế Cái Bầu"
+                  title="Fanpage Facebook Trạm Y tế Cái Bầu"
+                  className="w-10 h-10 rounded-full bg-white text-[var(--primary-dark)] flex items-center justify-center hover:bg-[var(--primary-light)] transition-colors"
+                >
+                  <Facebook className="w-5 h-5" />
+                </a>
+              </div>
+            </div>
           </div>
 
           <div>
