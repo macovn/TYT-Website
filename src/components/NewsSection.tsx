@@ -47,7 +47,7 @@ export default function NewsSection() {
               onClick={() => setExpandedId(featuredPost.id === expandedId ? null : featuredPost.id)}
               className="post-card group block cursor-pointer transition-all hover:shadow-[var(--shadow-lg)]"
             >
-              <div className="w-full aspect-[16/10] bg-gradient-to-br from-[var(--primary-light)] to-[var(--primary-mid)] flex items-center justify-center text-[var(--primary)] overflow-hidden relative">
+              <div className="w-full aspect-[16/10] bg-[var(--primary-light)] flex items-center justify-center text-[var(--primary)] overflow-hidden relative">
                 {(featuredPost.thumbnail || extractFirstImage(featuredPost.content)) ? (
                   <Image 
                     src={featuredPost.thumbnail || extractFirstImage(featuredPost.content)!} 
