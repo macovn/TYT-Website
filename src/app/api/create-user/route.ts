@@ -26,6 +26,18 @@ export async function POST(request: Request) {
       }
     });
 
+    // WO-WEB-01: admin client (service role) tạo sớm để đọc profile của
+    // người gọi khi kiểm tra quyền. Trước đây profile được đọc bằng anon
+    // client không gắn JWT người gọi — chỉ chạy nhờ policy SELECT của
+    // profiles đang mở công khai; nay đọc bằng service role nên việc kiểm
+    // tra quyền không còn phụ thuộc vào policy đọc đó nữa.
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
+
     // Get the authorization header
     const authHeader = request.headers.get('Authorization');
     if (!authHeader) {
@@ -39,8 +51,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check role from profiles table
-    const { data: profile, error: profileFetchError } = await supabase
+    // Check role from profiles table (bằng service role, xem ghi chú trên)
+    const { data: profile, error: profileFetchError } = await supabaseAdmin
       .from('profiles')
       .select('role')
       .eq('id', user.id)
@@ -50,20 +62,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // 2. Initialize Supabase admin client with service role key
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    });
+    // WO-WEB-01: chỉ chấp nhận role thuộc danh sách cho phép
+    const safeRole = role === 'admin' ? 'admin' : 'editor';
 
     // 1. Create user in Auth
     let { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
-      user_metadata: { role }
+      user_metadata: { role: safeRole }
     });
 
     if (authError) {
@@ -96,7 +103,7 @@ export async function POST(request: Request) {
             { 
               email_confirm: true,
               password: password, // Update password too
-              user_metadata: { role }
+              user_metadata: { role: safeRole }
             }
           );
           
@@ -125,7 +132,7 @@ export async function POST(request: Request) {
         .upsert({
           id: authData.user.id,
           email: email.toLowerCase().trim(),
-          role: role || 'editor',
+          role: safeRole,
           updated_at: new Date().toISOString()
         })
         .select();

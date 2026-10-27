@@ -24,6 +24,16 @@ export async function POST(request: Request) {
       }
     });
 
+    // WO-WEB-01: admin client (service role) tạo sớm để đọc profile của
+    // người gọi khi kiểm tra quyền — không còn đọc bằng anon client như
+    // trước (cách cũ phụ thuộc vào policy SELECT profiles mở công khai).
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
+
     const authHeader = request.headers.get('Authorization');
     if (!authHeader) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -36,7 +46,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: profile, error: profileFetchError } = await supabase
+    const { data: profile, error: profileFetchError } = await supabaseAdmin
       .from('profiles')
       .select('role')
       .eq('id', user.id)
@@ -45,14 +55,6 @@ export async function POST(request: Request) {
     if (profileFetchError || profile?.role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-
-    // 2. Initialize Supabase admin client with service role key
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    });
 
     // 1. Delete user from Auth
     const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(userId);
