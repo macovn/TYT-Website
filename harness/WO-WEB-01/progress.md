@@ -98,3 +98,15 @@ này trước khi tiếp tục.
 - Điều phối chính: mở PR từ nhánh dot-1/bao-mat-thong-tin, trình Maco duyệt.
 - Sau khi Maco xác nhận 4 nhóm thông tin ở Open issues: mở WO đợt sửa nội dung tương ứng.
 - Triển khai thật (chạy migration, deploy) là WO riêng, có lệnh riêng của Maco.
+
+---
+
+## Phụ lục 27/10/2026 — Áp migration lên Supabase live (Đợt 1 hoàn tất hiệu lực)
+
+- Project live: Supabase "Website" (ref wfygkioqceyjslbdpjht, org "Tram Y te Cai Bau"), chính là backend của tramytecaibau.com.
+- Điều kiện tiên quyết đã xử lý trên Dashboard: profiles có sẵn 1 admin (vuanhdung83vdqn@gmail.com) và 1 editor (hoangvan198@gmail.com); ĐÃ TẮT đăng ký công khai (trước đó đang BẬT) và kiểm chứng lại sau khi lưu.
+- Bản v1 (dot1-security-migration.sql) chạy lỗi "relation announcements does not exist" và rollback toàn bộ an toàn: schema live khác supabase_setup.sql (thiếu announcements; tên policy thực tế khác hẳn).
+- Dump catalog live cho thấy lỗ hổng nặng hơn báo cáo gốc: posts có policy DELETE điều kiện true cho role public (người lạ xóa được bài); Storage còn 4 policy mẫu cho phép người lạ INSERT/UPDATE file ở bucket documents/media; các policy "Admin Manage" của documents/media/services/staff thực chất chỉ check authenticated.
+- Bản v2 sql/dot1-security-migration-live.sql (soạn theo dump catalog thật) đã chạy THÀNH CÔNG ngày 27/10/2026, kiểm chứng KC1–KC4 đạt: hàm is_admin + protect_profile_role và trigger khóa role đã tồn tại; toàn bộ policy GHI của 8 bảng nội dung và storage.objects đều qua is_admin(); 4 policy mẫu ghi tự do đã bị xóa; tạo bổ sung bảng announcements (đang trống) đúng schema setup; messages khôi phục INSERT công khai cho form liên hệ, đọc/sửa/xóa chỉ admin. Kiểm tra nhanh sau khóa: trang chủ live vẫn tải và hiển thị bình thường.
+- Hệ quả vận hành đang hiệu lực: tài khoản editor (hoangvan198@gmail.com) KHÔNG còn ghi được nội dung qua RLS; chờ Maco quyết giữ chỉ admin hay mở rộng cho editor (mở rộng phải kèm kiểm chứng trigger tự tạo profile).
+- Còn nợ ngoài phạm vi migration: bảng questions chưa có (form Hỏi đáp, Đợt 2); đổi mật khẩu tài khoản quản trị hiện có (khuyến nghị báo cáo 01 mục 4.2).
