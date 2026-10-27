@@ -8,7 +8,7 @@ export default function Footer() {
   return (
     <footer className="bg-[var(--primary-dark)] text-white/80 pt-12">
       <div className="container">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-9 pb-10 border-b border-white/10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-9 pb-10 border-b border-white/10">
           <div>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-11 h-11 rounded-full bg-white overflow-hidden relative shrink-0">
@@ -37,31 +37,6 @@ export default function Footer() {
                 <span>T2-T6: 7:30–16:30 | Cấp cứu: 24/7</span>
               </li>
             </ul>
-            <div className="mt-6">
-              <div className="text-[14px] font-bold text-white mb-3">Theo dõi Trạm Y tế Cái Bầu</div>
-              <div className="flex items-center gap-2.5">
-                <a
-                  href="https://www.facebook.com/tramytecaibau"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Fanpage Facebook Trạm Y tế Cái Bầu"
-                  title="Fanpage Facebook Trạm Y tế Cái Bầu"
-                  className="w-10 h-10 rounded-full bg-white text-[var(--primary-dark)] flex items-center justify-center hover:bg-[var(--primary-light)] transition-colors"
-                >
-                  <Facebook className="w-5 h-5" />
-                </a>
-                <a
-                  href="https://www.youtube.com/@TramYTeCaiBau"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Kênh YouTube Trạm Y tế Cái Bầu"
-                  title="Kênh YouTube Trạm Y tế Cái Bầu"
-                  className="w-10 h-10 rounded-full bg-white text-[var(--primary-dark)] flex items-center justify-center hover:bg-[var(--primary-light)] transition-colors"
-                >
-                  <Youtube className="w-5 h-5" />
-                </a>
-              </div>
-            </div>
           </div>
 
           <div>
@@ -91,6 +66,32 @@ export default function Footer() {
               <li><a href="https://syt.quangninh.gov.vn" target="_blank" className="hover:text-[#9FD8C9] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Sở Y tế Quảng Ninh</a></li>
               <li><a href="https://moh.gov.vn" target="_blank" className="hover:text-[#9FD8C9] transition-colors flex items-center gap-1.5 before:content-['›'] before:text-[var(--primary)]">Bộ Y tế Việt Nam</a></li>
             </ul>
+          </div>
+          <div>
+            <h4 className="text-sm font-bold text-white mb-4 pb-2.5 border-b-2 border-[var(--primary)] inline-block">Mạng xã hội</h4>
+            <div className="flex items-center gap-2.5">
+              <a
+                href="https://www.facebook.com/tramytecaibau"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Fanpage Facebook Trạm Y tế Cái Bầu"
+                title="Fanpage Facebook Trạm Y tế Cái Bầu"
+                className="w-10 h-10 rounded-full bg-white text-[var(--primary-dark)] flex items-center justify-center hover:bg-[var(--primary-light)] transition-colors"
+              >
+                <Facebook className="w-5 h-5" />
+              </a>
+              <a
+                href="https://www.youtube.com/@TramYTeCaiBau"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Kênh YouTube Trạm Y tế Cái Bầu"
+                title="Kênh YouTube Trạm Y tế Cái Bầu"
+                className="w-10 h-10 rounded-full bg-white text-[var(--primary-dark)] flex items-center justify-center hover:bg-[var(--primary-light)] transition-colors"
+              >
+                <Youtube className="w-5 h-5" />
+              </a>
+            </div>
+            <p className="text-[13px] mt-3.5 leading-relaxed">Theo dõi Fanpage và kênh YouTube của Trạm để cập nhật thông báo, lịch tiêm chủng và kiến thức sức khỏe.</p>
           </div>
         </div>
       </div>
