@@ -19,7 +19,7 @@ export default function KhcnDmstPage() {
         .eq('status', 'published')
         .eq('category', 'khcn')
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(30);
 
       if (data) setPosts(data);
       setLoading(false);
