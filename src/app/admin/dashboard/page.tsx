@@ -426,6 +426,7 @@ export default function AdminDashboard() {
                     >
                       <option value="news">Tin tức</option>
                       <option value="announcement">Thông báo</option>
+                      <option value="khcn">KHCN - ĐMST</option>
                     </select>
                   </div>
                   <div className="space-y-2">
@@ -500,7 +501,7 @@ export default function AdminDashboard() {
                       <tr key={post.id} className="text-sm hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4 font-bold text-gray-800">{post.title}</td>
                         <td className="px-6 py-4 text-gray-500">
-                          {post.category === 'news' ? 'Tin tức' : 'Thông báo'}
+                          {post.category === 'news' ? 'Tin tức' : post.category === 'khcn' ? 'KHCN - ĐMST' : 'Thông báo'}
                         </td>
                         <td className="px-6 py-4">
                           <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
