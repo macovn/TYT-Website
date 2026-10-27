@@ -1,7 +1,7 @@
 # WO-WEB-03 — Progress
 
 ## Trạng thái
-- ĐÃ XONG phần code + kiểm chứng local (27/10/2026). Đang chờ gộp PR và kiểm chứng live (C7).
+- HOÀN TẤT (27/10/2026): PR #9 đã gộp (commit 7ae807f), bản live đã kiểm chứng trực quan đạt C7 lúc 14:43. 7/7 checks pass.
 
 ## Đã làm
 - globals.css: hệ token mới (primary #0C6B58, dark #084C3E, đỏ khẩn cấp #B42318, ink #17201C), bỏ mọi gradient trong file, bóng đổ gần như không còn, bo góc 8/10px, thân 17px/1.65, header bỏ shadow thành viền mảnh, section-tag bỏ dạng pill, thẻ bỏ hiệu ứng nhảy khi hover, quick-access thành dải sáng phẳng có viền, badge cấp cứu đỏ phẳng, prose headings bỏ Playfair.
