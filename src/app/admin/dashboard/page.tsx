@@ -13,6 +13,8 @@ import {
   LogOut, 
   Plus, 
   Eye, 
+  EyeOff,
+  Search,
   Trash2, 
   Edit,
   Stethoscope,
@@ -33,6 +35,11 @@ export default function AdminDashboard() {
   const [posts, setPosts] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [isAddingAnnouncement, setIsAddingAnnouncement] = useState(false);
+  const [editingAnnouncement, setEditingAnnouncement] = useState<any>(null);
+  const [announcementForm, setAnnouncementForm] = useState({ title: '', content: '', is_published: true });
+  const [announcementSearch, setAnnouncementSearch] = useState('');
   const [isAddingPost, setIsAddingPost] = useState(false);
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [userToDelete, setUserToDelete] = useState<any>(null);
@@ -57,6 +64,11 @@ export default function AdminDashboard() {
       if (msgsError) console.error("Error fetching messages:", msgsError);
       if (msgsData) setMessages(msgsData);
       
+      // Fetch Announcements
+      const { data: annsData, error: annsError } = await supabase.from('announcements').select('*').order('created_at', { ascending: false });
+      if (annsError) console.error("Error fetching announcements:", annsError);
+      if (annsData) setAnnouncements(annsData);
+
       // Fetch Users (Admin only)
       console.log("Attempting to fetch users from profiles table...");
       const { data: usersData, error: usersError } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
@@ -137,6 +149,70 @@ export default function AdminDashboard() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push('/admin/login');
+  };
+
+  const openAnnouncementModal = (announcement?: any) => {
+    if (announcement) {
+      setEditingAnnouncement(announcement);
+      setAnnouncementForm({
+        title: announcement.title || '',
+        content: announcement.content || '',
+        is_published: announcement.is_published ?? true
+      });
+    } else {
+      setEditingAnnouncement(null);
+      setAnnouncementForm({ title: '', content: '', is_published: true });
+    }
+    setIsAddingAnnouncement(true);
+  };
+
+  const handleSaveAnnouncement = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!announcementForm.title.trim()) return;
+    setIsSubmitting(true);
+    try {
+      const announcementData = {
+        title: announcementForm.title,
+        content: announcementForm.content,
+        is_published: announcementForm.is_published
+      };
+      if (editingAnnouncement) {
+        const { error } = await supabase.from('announcements').update(announcementData).eq('id', editingAnnouncement.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('announcements').insert([announcementData]);
+        if (error) throw error;
+      }
+      setIsAddingAnnouncement(false);
+      setEditingAnnouncement(null);
+      fetchData();
+      alert(editingAnnouncement ? 'Cập nhật thông báo thành công!' : 'Thêm thông báo thành công!');
+    } catch (error: any) {
+      alert('Lỗi: ' + error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteAnnouncement = async (id: string) => {
+    if (!confirm('Bạn có chắc chắn muốn xóa thông báo này?')) return;
+    try {
+      const { error } = await supabase.from('announcements').delete().eq('id', id);
+      if (error) throw error;
+      fetchData();
+    } catch (error: any) {
+      alert('Lỗi khi xóa: ' + error.message);
+    }
+  };
+
+  const toggleAnnouncementPublish = async (announcement: any) => {
+    try {
+      const { error } = await supabase.from('announcements').update({ is_published: !announcement.is_published }).eq('id', announcement.id);
+      if (error) throw error;
+      fetchData();
+    } catch (error: any) {
+      alert('Lỗi: ' + error.message);
+    }
   };
 
   const handleCreatePost = async (e: React.FormEvent) => {
@@ -457,6 +533,68 @@ export default function AdminDashboard() {
             </div>
           )}
 
+          {isAddingAnnouncement && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-3xl p-8 max-w-2xl w-full shadow-2xl animate-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">{editingAnnouncement ? 'Chỉnh sửa thông báo' : 'Thêm thông báo mới'}</h2>
+                <form onSubmit={handleSaveAnnouncement} className="space-y-5">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-gray-700">Tiêu đề thông báo</label>
+                    <input
+                      type="text"
+                      required
+                      value={announcementForm.title}
+                      onChange={(e) => setAnnouncementForm({ ...announcementForm, title: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--primary)] transition-all"
+                      placeholder="Nhập tiêu đề thông báo..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-gray-700">Nội dung chi tiết</label>
+                    <Editor
+                      content={announcementForm.content}
+                      onChange={(html) => setAnnouncementForm({ ...announcementForm, content: html })}
+                    />
+                  </div>
+                  <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
+                    <button
+                      type="button"
+                      onClick={() => setAnnouncementForm({ ...announcementForm, is_published: !announcementForm.is_published })}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                        announcementForm.is_published ? 'bg-[var(--primary)]' : 'bg-gray-300'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          announcementForm.is_published ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-sm font-medium text-gray-700">
+                      {announcementForm.is_published ? 'Đăng công khai ngay' : 'Lưu dưới dạng bản nháp'}
+                    </span>
+                  </div>
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingAnnouncement(false)}
+                      className="flex-1 bg-gray-100 text-gray-600 font-bold py-3 rounded-xl hover:bg-gray-200 transition-all"
+                    >
+                      Hủy bỏ
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="flex-[2] bg-[var(--primary)] text-white font-bold py-3 rounded-xl hover:bg-[var(--primary-dark)] transition-all disabled:opacity-50"
+                    >
+                      {isSubmitting ? 'Đang lưu...' : editingAnnouncement ? 'Cập nhật thông báo' : 'Đăng thông báo'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
           {activeTab === 'dashboard' && (
             <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -593,10 +731,84 @@ export default function AdminDashboard() {
           )}
 
           {activeTab === 'announcements' && role === 'admin' && (
-            <div className="bg-white p-12 rounded-2xl shadow-sm border border-gray-100 text-center">
-              <Megaphone className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-bold text-gray-800">Quản lý thông báo</h3>
-              <p className="text-gray-500">Tính năng đang được phát triển.</p>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <h3 className="font-bold text-gray-800">Tất cả thông báo</h3>
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input
+                      type="text"
+                      value={announcementSearch}
+                      onChange={(e) => setAnnouncementSearch(e.target.value)}
+                      placeholder="Tìm kiếm thông báo..."
+                      className="pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[var(--primary)] transition-all"
+                    />
+                  </div>
+                  <button
+                    onClick={() => openAnnouncementModal()}
+                    className="bg-[var(--primary)] text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 whitespace-nowrap"
+                  >
+                    <Plus className="w-4 h-4" /> Thêm mới
+                  </button>
+                </div>
+              </div>
+              <table className="w-full text-left">
+                <thead className="bg-gray-50 text-[11px] uppercase tracking-wider font-bold text-gray-500">
+                  <tr>
+                    <th className="px-6 py-4">Tiêu đề</th>
+                    <th className="px-6 py-4">Ngày tạo</th>
+                    <th className="px-6 py-4">Trạng thái</th>
+                    <th className="px-6 py-4">Hành động</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {announcements.filter((a) => a.title?.toLowerCase().includes(announcementSearch.toLowerCase())).length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-12 text-center text-gray-400">Không tìm thấy thông báo nào</td>
+                    </tr>
+                  ) : (
+                    announcements
+                      .filter((a) => a.title?.toLowerCase().includes(announcementSearch.toLowerCase()))
+                      .map((a) => (
+                        <tr key={a.id} className="text-sm hover:bg-gray-50 transition-colors">
+                          <td className="px-6 py-4 font-bold text-gray-800">{a.title}</td>
+                          <td className="px-6 py-4 text-gray-500">
+                            {new Date(a.created_at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          </td>
+                          <td className="px-6 py-4">
+                            <button
+                              onClick={() => toggleAnnouncementPublish(a)}
+                              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                                a.is_published ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                              }`}
+                            >
+                              {a.is_published ? (<><Eye className="w-3.5 h-3.5" /> Đã đăng</>) : (<><EyeOff className="w-3.5 h-3.5" /> Bản nháp</>)}
+                            </button>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => openAnnouncementModal(a)}
+                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                title="Chỉnh sửa"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteAnnouncement(a.id)}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Xóa"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                  )}
+                </tbody>
+              </table>
             </div>
           )}
 
