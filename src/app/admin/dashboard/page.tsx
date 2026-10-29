@@ -19,7 +19,9 @@ import {
   Edit,
   Stethoscope,
   Image as ImageIcon,
-  Users
+  Users,
+  Upload,
+  Download
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import dynamic from 'next/dynamic';
@@ -40,6 +42,10 @@ export default function AdminDashboard() {
   const [editingAnnouncement, setEditingAnnouncement] = useState<any>(null);
   const [announcementForm, setAnnouncementForm] = useState({ title: '', content: '', is_published: true });
   const [announcementSearch, setAnnouncementSearch] = useState('');
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [isAddingDocument, setIsAddingDocument] = useState(false);
+  const [documentForm, setDocumentForm] = useState<{ title: string; file: File | null }>({ title: '', file: null });
+  const [documentSearch, setDocumentSearch] = useState('');
   const [isAddingPost, setIsAddingPost] = useState(false);
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [userToDelete, setUserToDelete] = useState<any>(null);
@@ -68,6 +74,11 @@ export default function AdminDashboard() {
       const { data: annsData, error: annsError } = await supabase.from('announcements').select('*').order('created_at', { ascending: false });
       if (annsError) console.error("Error fetching announcements:", annsError);
       if (annsData) setAnnouncements(annsData);
+
+      // Fetch Documents
+      const { data: docsData, error: docsError } = await supabase.from('documents').select('*').order('created_at', { ascending: false });
+      if (docsError) console.error("Error fetching documents:", docsError);
+      if (docsData) setDocuments(docsData);
 
       // Fetch Users (Admin only)
       console.log("Attempting to fetch users from profiles table...");
@@ -212,6 +223,50 @@ export default function AdminDashboard() {
       fetchData();
     } catch (error: any) {
       alert('Lỗi: ' + error.message);
+    }
+  };
+
+  const handleUploadDocument = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!documentForm.file || !documentForm.title.trim()) return;
+    setIsSubmitting(true);
+    try {
+      const file = documentForm.file;
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `docs/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage.from('documents').upload(filePath, file);
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage.from('documents').getPublicUrl(filePath);
+
+      const { error: dbError } = await supabase.from('documents').insert([{ title: documentForm.title, file_url: publicUrl }]);
+      if (dbError) throw dbError;
+
+      setIsAddingDocument(false);
+      setDocumentForm({ title: '', file: null });
+      fetchData();
+      alert('Tải lên tài liệu thành công!');
+    } catch (error: any) {
+      alert('Lỗi: ' + error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteDocument = async (id: string, fileUrl: string) => {
+    if (!confirm('Bạn có chắc chắn muốn xóa tài liệu này?')) return;
+    try {
+      const urlParts = fileUrl.split('/');
+      const fileName = urlParts[urlParts.length - 1];
+      const filePath = `docs/${fileName}`;
+      await supabase.storage.from('documents').remove([filePath]);
+      const { error } = await supabase.from('documents').delete().eq('id', id);
+      if (error) throw error;
+      fetchData();
+    } catch (error: any) {
+      alert('Lỗi khi xóa: ' + error.message);
     }
   };
 
@@ -595,6 +650,70 @@ export default function AdminDashboard() {
             </div>
           )}
 
+          {isAddingDocument && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-3xl p-8 max-w-xl w-full shadow-2xl animate-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">Tải lên tài liệu mới</h2>
+                <form onSubmit={handleUploadDocument} className="space-y-5">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-gray-700">Tiêu đề tài liệu</label>
+                    <input
+                      type="text"
+                      required
+                      value={documentForm.title}
+                      onChange={(e) => setDocumentForm({ ...documentForm, title: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--primary)] transition-all"
+                      placeholder="Ví dụ: Hướng dẫn phòng chống dịch sốt xuất huyết"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-gray-700">Chọn file</label>
+                    <input
+                      type="file"
+                      required
+                      onChange={(e) => setDocumentForm({ ...documentForm, file: e.target.files?.[0] || null })}
+                      className="hidden"
+                      id="doc-file-upload"
+                    />
+                    <label
+                      htmlFor="doc-file-upload"
+                      className="w-full bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl px-4 py-8 flex flex-col items-center justify-center cursor-pointer hover:border-[var(--primary)] transition-all"
+                    >
+                      {documentForm.file ? (
+                        <div className="flex items-center gap-2 text-[var(--primary)] font-bold">
+                          <FileText className="w-6 h-6" />
+                          <span>{documentForm.file.name}</span>
+                        </div>
+                      ) : (
+                        <>
+                          <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                          <span className="text-sm text-gray-500">Nhấn để chọn file</span>
+                          <span className="text-xs text-gray-400 mt-1">Hỗ trợ PDF, DOCX, XLSX...</span>
+                        </>
+                      )}
+                    </label>
+                  </div>
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingDocument(false)}
+                      className="flex-1 bg-gray-100 text-gray-600 font-bold py-3 rounded-xl hover:bg-gray-200 transition-all"
+                    >
+                      Hủy bỏ
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmitting || !documentForm.file}
+                      className="flex-[2] bg-[var(--primary)] text-white font-bold py-3 rounded-xl hover:bg-[var(--primary-dark)] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {isSubmitting ? 'Đang tải lên...' : (<><Upload className="w-5 h-5" /> Tải lên</>)}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
           {activeTab === 'dashboard' && (
             <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -602,7 +721,7 @@ export default function AdminDashboard() {
                   { label: 'Bài viết', value: posts.length, icon: <Newspaper />, color: 'bg-blue-500' },
                   { label: 'Lượt xem', value: '1,248', icon: <Eye />, color: 'bg-green-500' },
                   { label: 'Tin nhắn', value: messages.length, icon: <MessageSquare />, color: 'bg-yellow-500' },
-                  { label: 'Tài liệu', value: '12', icon: <FileText />, color: 'bg-red-500' },
+                  { label: 'Tài liệu', value: documents.length, icon: <FileText />, color: 'bg-red-500' },
                 ].map((stat, i) => (
                   <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                     <div className={`w-12 h-12 ${stat.color} text-white rounded-xl flex items-center justify-center mb-4 shadow-lg`}>
@@ -813,10 +932,80 @@ export default function AdminDashboard() {
           )}
 
           {activeTab === 'documents' && role === 'admin' && (
-            <div className="bg-white p-12 rounded-2xl shadow-sm border border-gray-100 text-center">
-              <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-bold text-gray-800">Quản lý tài liệu</h3>
-              <p className="text-gray-500">Tính năng đang được phát triển.</p>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <h3 className="font-bold text-gray-800">Tất cả tài liệu</h3>
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input
+                      type="text"
+                      value={documentSearch}
+                      onChange={(e) => setDocumentSearch(e.target.value)}
+                      placeholder="Tìm kiếm tài liệu..."
+                      className="pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[var(--primary)] transition-all"
+                    />
+                  </div>
+                  <button
+                    onClick={() => setIsAddingDocument(true)}
+                    className="bg-[var(--primary)] text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 whitespace-nowrap"
+                  >
+                    <Plus className="w-4 h-4" /> Thêm mới
+                  </button>
+                </div>
+              </div>
+              <table className="w-full text-left">
+                <thead className="bg-gray-50 text-[11px] uppercase tracking-wider font-bold text-gray-500">
+                  <tr>
+                    <th className="px-6 py-4">Tên tài liệu</th>
+                    <th className="px-6 py-4">Ngày tải lên</th>
+                    <th className="px-6 py-4">Hành động</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {documents.filter((d) => d.title?.toLowerCase().includes(documentSearch.toLowerCase())).length === 0 ? (
+                    <tr>
+                      <td colSpan={3} className="px-6 py-12 text-center text-gray-400">Chưa có tài liệu nào.</td>
+                    </tr>
+                  ) : (
+                    documents
+                      .filter((d) => d.title?.toLowerCase().includes(documentSearch.toLowerCase()))
+                      .map((doc) => (
+                        <tr key={doc.id} className="text-sm hover:bg-gray-50 transition-colors">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center text-red-600 shrink-0">
+                                <FileText className="w-5 h-5" />
+                              </div>
+                              <span className="font-bold text-gray-800">{doc.title}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-gray-500">{new Date(doc.created_at).toLocaleDateString('vi-VN')}</td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <a
+                                href={doc.file_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                title="Tải xuống"
+                              >
+                                <Download className="w-4 h-4" />
+                              </a>
+                              <button
+                                onClick={() => handleDeleteDocument(doc.id, doc.file_url)}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Xóa"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                  )}
+                </tbody>
+              </table>
             </div>
           )}
 
