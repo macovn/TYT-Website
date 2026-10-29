@@ -99,7 +99,7 @@ export default function Footer() {
         <div className="container">
           <div className="flex flex-wrap justify-between items-center gap-2 text-[12.5px] py-4">
             <span>© 2026 Trạm Y tế Cái Bầu – Đặc khu Vân Đồn – thành phố Quảng Ninh</span>
-            <span>Thiết kế bởi: <span className="text-[#9FD8C9]">Trương Thái Nguyên</span></span>
+            <span>Thiết kế bởi: <span className="text-[#9FD8C9]">Trương Thái Nguyên và Cộng sự</span></span>
           </div>
         </div>
       </div>
