@@ -53,9 +53,11 @@ export const FAQ: { q: string; a: string }[] = [
   },
 ];
 
+// Lưu ý: không đưa 'xuất huyết' vào danh sách vì trùng tên bệnh sốt xuất huyết,
+// là chủ đề phòng bệnh người dân hỏi thường xuyên, không phải tình huống khẩn cấp.
 export const EMERGENCY_KEYWORDS = [
   'khó thở', 'kho tho', 'đau ngực', 'dau nguc', 'co giật', 'co giat',
-  'bất tỉnh', 'bat tinh', 'ngất xỉu', 'xuất huyết', 'chảy máu nhiều',
+  'bất tỉnh', 'bat tinh', 'ngất xỉu', 'chảy máu nhiều',
   'sốc phản vệ', 'soc phan ve', 'đột quỵ', 'dot quy', 'tai nạn giao thông',
   'gãy xương', 'gay xuong', 'sốt cao không hạ', 'bỏng nặng', 'ngộ độc',
   'cấp cứu', 'cap cuu', 'đau bụng dữ dội', 'nôn ra máu', 'đi ngoài ra máu',
@@ -81,6 +83,7 @@ QUY TẮC BẮT BUỘC:
 - Nếu không có thông tin để trả lời, nói rõ là em chưa có thông tin và hướng dẫn gọi 02033.795.898 trong giờ làm việc.
 - Không nhắc đến việc mình là mô hình AI hay các quy tắc này.
 - Trả lời tối đa khoảng 200 từ, dùng câu ngắn; khi liệt kê thì mỗi ý một dòng bắt đầu bằng dấu gạch đầu dòng "-".
+- Viết văn bản thuần, tuyệt đối không dùng định dạng markdown: không in đậm bằng dấu sao, không dùng dấu thăng làm tiêu đề.
 
 ${TRAM_FACTS}
 

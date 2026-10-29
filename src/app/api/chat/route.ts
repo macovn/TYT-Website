@@ -35,9 +35,11 @@ function rateLimited(ip: string): boolean {
   return entry.count > 20;
 }
 
+// Route này chỉ cần khóa anon công khai: đọc posts (công khai) và ghi nhật
+// ký qua hàm log_chat SECURITY DEFINER. Không phụ thuộc service role key.
 function serverClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) return null;
   return createClient(url, key, { auth: { persistSession: false } });
 }
@@ -46,9 +48,11 @@ async function logChat(question: string, answer: string, provider: string) {
   try {
     const sb = serverClient();
     if (!sb) return;
-    await sb.from('chat_logs').insert({ question, answer, provider });
-  } catch {
-    // Ghi nhật ký lỗi không được làm hỏng câu trả lời.
+    const { error } = await sb.rpc('log_chat', { q: question, a: answer, p: provider });
+    if (error) console.error('WO-WEB-06 log_chat failed:', error.message);
+  } catch (e) {
+    // Ghi nhật ký lỗi không được làm hỏng câu trả lời, nhưng phải để lại dấu vết.
+    console.error('WO-WEB-06 log_chat exception:', e);
   }
 }
 
