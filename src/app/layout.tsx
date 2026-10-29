@@ -4,6 +4,7 @@ import "@/app/globals.css";
 import TopBar from "@/components/TopBar";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SupportChat from "@/components/SupportChat";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["vietnamese"],
@@ -64,6 +65,7 @@ export default function RootLayout({
           <main>{children}</main>
           <Footer />
         </div>
+        <SupportChat />
       </body>
     </html>
   );
