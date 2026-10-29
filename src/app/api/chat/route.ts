@@ -10,7 +10,7 @@ import {
 
 // WO-WEB-06: API cho Bot hỗ trợ người dân.
 // Luồng: sàng lọc khẩn cấp (xác định, không qua AI) -> truy xuất bài viết
-// liên quan -> DeepSeek chính, Gemini dự phòng -> ghi nhật ký chat_logs.
+// liên quan -> DeepSeek chính, OpenRouter rồi Gemini dự phòng -> ghi nhật ký chat_logs.
 // Khóa API chỉ nằm ở biến môi trường phía server.
 
 export const dynamic = 'force-dynamic';
@@ -115,6 +115,37 @@ async function callDeepSeek(system: string, history: { role: string; content: st
   }
 }
 
+async function callOpenRouter(system: string, history: { role: string; content: string }[]): Promise<string> {
+  const key = process.env.OPENROUTER_API_KEY;
+  if (!key) throw new Error('no openrouter key');
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 20000);
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      signal: ctrl.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${key}`,
+        'X-Title': 'Bot An - Tram Y te Cai Bau',
+      },
+      body: JSON.stringify({
+        model: 'deepseek/deepseek-chat',
+        messages: [{ role: 'system', content: system }, ...history],
+        temperature: 0.3,
+        max_tokens: 800,
+      }),
+    });
+    if (!res.ok) throw new Error(`openrouter ${res.status}`);
+    const json = await res.json();
+    const text = json?.choices?.[0]?.message?.content;
+    if (!text) throw new Error('openrouter empty');
+    return text;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function callGemini(system: string, history: { role: string; content: string }[]): Promise<string> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error('no gemini key');
@@ -175,7 +206,7 @@ export async function POST(request: Request) {
     }
 
     // 2) Chưa cấu hình khóa AI: trả thông điệp êm.
-    if (!process.env.DEEPSEEK_API_KEY && !process.env.GEMINI_API_KEY) {
+    if (!process.env.DEEPSEEK_API_KEY && !process.env.GEMINI_API_KEY && !process.env.OPENROUTER_API_KEY) {
       await logChat(lastUser, NOT_CONFIGURED_REPLY, 'not-configured');
       return NextResponse.json({ reply: NOT_CONFIGURED_REPLY, provider: 'not-configured', sources: [] });
     }
@@ -190,11 +221,16 @@ export async function POST(request: Request) {
       provider = 'deepseek';
     } catch {
       try {
-        reply = await callGemini(system, history);
-        provider = 'gemini';
+        reply = await callOpenRouter(system, history);
+        provider = 'openrouter';
       } catch {
-        reply = FALLBACK_REPLY;
-        provider = 'error';
+        try {
+          reply = await callGemini(system, history);
+          provider = 'gemini';
+        } catch {
+          reply = FALLBACK_REPLY;
+          provider = 'error';
+        }
       }
     }
     await logChat(lastUser, reply, provider);
