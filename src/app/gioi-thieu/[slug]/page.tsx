@@ -112,15 +112,15 @@ export default function PublicPage() {
 
               <div className="bg-[var(--primary)] rounded-[24px] p-8 text-white shadow-xl relative overflow-hidden group">
                 <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
-                <h3 className="text-xl font-bold mb-6 pb-2 border-b-2 border-[var(--accent)] inline-block">Hỗ trợ khẩn cấp</h3>
+                <h3 className="text-xl font-bold mb-6 pb-2 border-b-2 border-white/50 inline-block">Hỗ trợ khẩn cấp</h3>
                 <div className="space-y-6 relative z-10">
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
-                      <Phone className="w-5 h-5 text-[var(--accent)]" />
+                      <Phone className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <div className="text-2xl font-black text-[var(--accent)]">0203.3822.115</div>
-                      <div className="text-[12px] opacity-70">Đường dây cấp cứu 24/7</div>
+                      <div className="text-2xl font-black text-white">0203.3822.115</div>
+                      <div className="text-[13px] font-medium text-[#D8F0E7]">Đường dây cấp cứu 24/7</div>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
@@ -129,14 +129,14 @@ export default function PublicPage() {
                     </div>
                     <div>
                       <div className="font-bold">Làm việc: 7:30 – 16:30</div>
-                      <div className="text-[12px] opacity-70">Thứ 2 – Thứ 6 hàng tuần</div>
+                      <div className="text-[13px] font-medium text-[#D8F0E7]">Thứ 2 – Thứ 6 hàng tuần</div>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
                       <MapPin className="w-5 h-5" />
                     </div>
-                    <div className="text-[13px] leading-relaxed opacity-90">
+                    <div className="text-[13px] leading-relaxed font-medium">
                       Khu phố Đông Xá 3, Đặc khu Vân Đồn, thành phố Quảng Ninh
                     </div>
                   </div>
