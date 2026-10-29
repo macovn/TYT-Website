@@ -167,12 +167,12 @@ export default function NewsPage() {
               </div>
 
               <div className="bg-[var(--primary)] rounded-[var(--radius-lg)] p-6 text-white shadow-[var(--shadow)]">
-                <h3 className="text-lg font-bold mb-4 pb-2 border-b-2 border-[var(--accent)] inline-block">Hỗ trợ khẩn cấp</h3>
-                <p className="text-[13px] opacity-85 mb-4 leading-relaxed">Cần tư vấn y tế hoặc cấp cứu? Liên hệ ngay với chúng tôi.</p>
-                <div className="text-2xl font-extrabold text-[var(--accent)] mb-2 flex items-center gap-2">
+                <h3 className="text-lg font-bold mb-4 pb-2 border-b-2 border-white/50 inline-block">Hỗ trợ khẩn cấp</h3>
+                <p className="text-[13px] text-[#E3F2EC] mb-4 leading-relaxed">Cần tư vấn y tế hoặc cấp cứu? Liên hệ ngay với chúng tôi.</p>
+                <div className="text-2xl font-extrabold text-white mb-2 flex items-center gap-2">
                   <Phone className="w-6 h-6" /> 0203.3822.115
                 </div>
-                <div className="text-[12px] opacity-75">Đường dây cấp cứu 24/7</div>
+                <div className="text-[13px] font-medium text-[#D8F0E7]">Đường dây cấp cứu 24/7</div>
                 <div className="mt-4 pt-4 border-t border-white/10 text-[13px] font-semibold flex items-center gap-2">
                   <Phone className="w-4 h-4" /> 0203.3795.898
                 </div>
