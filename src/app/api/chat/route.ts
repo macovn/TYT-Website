@@ -16,10 +16,10 @@ import {
 export const dynamic = 'force-dynamic';
 
 const STOPWORDS = new Set([
-  'cho', 'hoi', 'muon', 'biet', 'duoc', 'khong', 'nhung', 'ngay', 'thang',
-  'tram', 'the', 'nao', 'gi', 'co', 'la', 'cua', 'va', 'thi', 'em', 'anh',
-  'chi', 'xin', 've', 'o', 'tai', 'khi', 'den', 'di', 'lam', 'sao', 'bao',
-  'nhieu', 'mot', 'hai', 'nay', 'do', 'ra', 'vao', 'len', 'voi', 'tu',
+  'những', 'được', 'không', 'gì', 'nào', 'thế', 'sao', 'khi', 'bị', 'đã', 'đang', 'sẽ',
+  'của', 'và', 'cho', 'hỏi', 'muốn', 'biết', 'có', 'là', 'thì', 'ở', 'tại', 'đến', 'đi',
+  'ra', 'vào', 'lên', 'với', 'từ', 'các', 'này', 'đó', 'em', 'anh', 'chị', 'xin', 'về',
+  'ngày', 'tháng', 'trạm', 'theo', 'sau', 'trước', 'gồm',
 ]);
 
 // Giới hạn lượt gọi đơn giản theo IP (bộ nhớ tạm của tiến trình).
@@ -64,32 +64,116 @@ function stripHtml(html: string): string {
     .trim();
 }
 
-async function retrievePosts(question: string) {
-  const sb = serverClient();
-  if (!sb) return { context: '', sources: [] as { title: string; url: string }[] };
-  const words = question
+function syllablesOf(question: string): string[] {
+  const toks = question
     .toLowerCase()
     .replace(/[^\p{L}\p{N}\s]/gu, ' ')
     .split(/\s+/)
-    .filter((w) => w.length >= 4 && !STOPWORDS.has(w))
-    .sort((a, b) => b.length - a.length)
-    .slice(0, 4);
-  const byId = new Map<string, any>();
-  for (const w of words) {
-    const { data } = await sb
-      .from('posts')
-      .select('id, title, content')
-      .ilike('title', `%${w}%`)
-      .limit(3);
-    (data || []).forEach((p: any) => byId.set(p.id, p));
-    if (byId.size >= 3) break;
+    .filter((w) => w.length >= 2 && !STOPWORDS.has(w));
+  return Array.from(new Set(toks)).slice(0, 8);
+}
+
+type Source = { title: string; url: string };
+
+// WO-WEB-07: Truy xuat kho phap luat bang cum 2 am tiet + trong so IDF.
+// Tieng Viet la ngon ngu don am: cham theo am tiet le rat nhieu, nen don vi
+// truy xuat chinh la cum 2 am tiet lien ke (vd "tiêm chủng", "bắt buộc",
+// "phản vệ"), trong so theo do hiem trong kho (IDF), cong diem tan suat
+// xuat hien va khop o nhan Dieu/muc. Bai viet giu cach cham rieng don gian.
+async function retrieveContext(question: string) {
+  const empty = { context: '', sources: [] as Source[] };
+  const sb = serverClient();
+  if (!sb) return empty;
+  const syl = syllablesOf(question);
+  if (syl.length === 0) return empty;
+
+  const bigrams = syl.slice(0, -1).map((a, i) => `${a} ${syl[i + 1]}`);
+  const units = [
+    ...bigrams.map((u) => ({ u, mult: 3 })),
+    ...syl.map((u) => ({ u, mult: 1 })),
+  ];
+
+  const { count: totalCount } = await sb
+    .from('bot_chunks')
+    .select('id', { count: 'exact', head: true });
+  const TOTAL = totalCount && totalCount > 0 ? totalCount : 321;
+
+  const perUnit = await Promise.all(
+    units.map(async ({ u, mult }) => {
+      const [{ count }, { data }] = await Promise.all([
+        sb.from('bot_chunks').select('id', { count: 'exact', head: true }).ilike('content', `%${u}%`),
+        sb.from('bot_chunks').select('id, doc_title, section, content').ilike('content', `%${u}%`).limit(12),
+      ]);
+      const w = Math.log(1 + TOTAL / Math.max(1, count || 0));
+      return { u, mult, w, rows: (data || []) as any[] };
+    })
+  );
+
+  const cmap = new Map<string, any>();
+  perUnit.forEach((pu) => pu.rows.forEach((r) => cmap.set(r.id, r)));
+  const scored = Array.from(cmap.values())
+    .map((c) => {
+      const cl = (c.content || '').toLowerCase();
+      const sl = (c.section || '').toLowerCase();
+      let score = 0;
+      for (const pu of perUnit) {
+        const occ = Math.min(cl.split(pu.u).length - 1, 2);
+        const inSection = sl.includes(pu.u);
+        if (occ > 0 || inSection) score += pu.w * pu.mult * (occ + (inSection ? 2 : 0));
+      }
+      return { doc_title: c.doc_title as string, section: (c.section || '') as string, content: c.content as string, score };
+    })
+    .filter((c) => c.score > 1)
+    .sort((a, b) => b.score - a.score);
+
+  const chunks: typeof scored = [];
+  const seenSection = new Set<string>();
+  for (const c of scored) {
+    const k = `${c.doc_title}|${c.section}`;
+    if (seenSection.has(k)) continue;
+    seenSection.add(k);
+    chunks.push(c);
+    if (chunks.length >= 4) break;
   }
-  const posts = Array.from(byId.values()).slice(0, 3);
-  const context = posts
-    .map((p) => `- Bài "${p.title}": ${stripHtml(p.content).slice(0, 500)}`)
-    .join('\n');
-  const sources = posts.map((p) => ({ title: p.title, url: `/tin-tuc/${p.id}` }));
-  return { context, sources };
+
+  // Bai viet: cham theo am tiet khop tieu de (x3) va noi dung (x1)
+  const postMap = new Map<string, any>();
+  for (const w of syl) {
+    const { data } = await sb.from('posts').select('id, title, content').ilike('title', `%${w}%`).limit(8);
+    (data || []).forEach((p: any) => postMap.set(p.id, p));
+  }
+  const posts = Array.from(postMap.values())
+    .map((p: any) => {
+      let score = 0;
+      const contentText = stripHtml(p.content);
+      for (const w of syl) {
+        if ((p.title || '').toLowerCase().includes(w)) score += 3;
+        if (contentText.toLowerCase().includes(w)) score += 1;
+      }
+      return { id: p.id as string, title: p.title as string, content: contentText, score };
+    })
+    .filter((p) => p.score >= 4)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 2);
+
+  const parts: string[] = [];
+  if (chunks.length > 0) {
+    parts.push(
+      'ĐOẠN VĂN BẢN PHÁP LUẬT:\n' +
+        chunks.map((c) => `[${c.doc_title} — ${c.section}] ${c.content.slice(0, 900)}`).join('\n')
+    );
+  }
+  if (posts.length > 0) {
+    parts.push(
+      'BÀI VIẾT TRÊN WEBSITE:\n' +
+        posts.map((p) => `- Bài "${p.title}": ${p.content.slice(0, 400)}`).join('\n')
+    );
+  }
+  const sources: Source[] = [
+    ...chunks.map((c) => ({ title: `${c.doc_title} — ${c.section}`, url: '' })),
+    ...posts.map((p) => ({ title: p.title, url: `/tin-tuc/${p.id}` })),
+  ];
+  return { context: parts.join('\n\n'), sources };
 }
 
 async function callDeepSeek(system: string, history: { role: string; content: string }[]): Promise<string> {
@@ -216,7 +300,7 @@ export async function POST(request: Request) {
     }
 
     // 3) Truy xuất bài viết liên quan + gọi AI.
-    const { context, sources } = await retrievePosts(lastUser);
+    const { context, sources } = await retrieveContext(lastUser);
     const system = buildSystemPrompt(context);
     let reply = '';
     let provider = '';

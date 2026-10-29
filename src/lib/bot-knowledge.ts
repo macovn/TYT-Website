@@ -90,6 +90,8 @@ ${TRAM_FACTS}
 CÂU HỎI THƯỜNG GẶP:
 ${faqText}
 
-NGỮ CẢNH BÀI VIẾT TRÊN WEBSITE CỦA TRẠM (chỉ dùng khi liên quan đến câu hỏi; có thể gợi ý người dân đọc thêm bài viết):
-${retrievedContext || '(không có bài viết liên quan)'}`;
+NGỮ CẢNH TRA CỨU ĐƯỢC (gồm đoạn văn bản pháp luật trong kho tri thức và bài viết trên website của Trạm; chỉ dùng phần liên quan đến câu hỏi):
+${retrievedContext || '(không có ngữ cảnh liên quan)'}
+
+Khi trả lời dựa vào một đoạn văn bản pháp luật, phải nêu rõ căn cứ trong câu trả lời, ví dụ: "Theo Điều 3, Thông tư 13/2026/TT-BYT...". Khi trả lời dựa vào bài viết, có thể gợi ý người dân đọc thêm bài viết đó.`;
 }

@@ -132,15 +132,21 @@ export default function SupportChat() {
                   {m.sources && m.sources.length > 0 && (
                     <div className="mt-2 pt-2 border-t border-gray-100 space-y-1">
                       <p className="text-xs font-semibold text-gray-500">Đọc thêm:</p>
-                      {m.sources.map((s) => (
-                        <Link
-                          key={s.url}
-                          href={s.url}
-                          className="block text-xs text-[var(--primary)] font-medium hover:underline"
-                        >
-                          {s.title}
-                        </Link>
-                      ))}
+                      {m.sources.map((s, j) =>
+                        s.url ? (
+                          <Link
+                            key={j}
+                            href={s.url}
+                            className="block text-xs text-[var(--primary)] font-medium hover:underline"
+                          >
+                            {s.title}
+                          </Link>
+                        ) : (
+                          <span key={j} className="block text-xs text-gray-500 font-medium">
+                            Căn cứ: {s.title}
+                          </span>
+                        )
+                      )}
                     </div>
                   )}
                 </div>
