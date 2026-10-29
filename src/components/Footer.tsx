@@ -8,7 +8,7 @@ export default function Footer() {
   return (
     <footer className="bg-[var(--primary-dark)] text-white/80 pt-12">
       <div className="container">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-9 pb-10 border-b border-white/10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.35fr_1fr_1fr_1fr_1.15fr] gap-9 pb-10 border-b border-white/10">
           <div>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-11 h-11 rounded-full bg-white overflow-hidden relative shrink-0">
