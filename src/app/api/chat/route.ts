@@ -230,6 +230,11 @@ async function retrieveContext(question: string) {
   // cac doan lien tiep dung chung tu vung; gioi han nay giu cho doan dich
   // cua van ban khac con cho, nhung van cho phep mot van ban chuyen sau
   // (vd Thong tu 51/2017 ve phan ve) giu 3 vi tri dau.
+  // WO-WEB-11: nhom chon gom 5 doan thay vi 4. Voi cac cach hoi liet ke
+  // (vd "Cac loai vac xin trong Chuong trinh tiem chung mo rong la gi?"),
+  // doan danh muc dung noi dung (Dieu 3 TT 13/2026) chi thua doan thu tuc
+  // o vi tri chon cuoi mot khoang diem rat nho; 5 doan giu duoc ca ngu
+  // canh thu tuc lan doan danh muc, kem theo tran 3 doan/van ban o tren.
   const chunks: typeof scored = [];
   const seenSection = new Set<string>();
   const docPicked = new Map<string, number>();
@@ -240,7 +245,7 @@ async function retrieveContext(question: string) {
     seenSection.add(k);
     docPicked.set(c.doc_code, (docPicked.get(c.doc_code) || 0) + 1);
     chunks.push(c);
-    if (chunks.length >= 4) break;
+    if (chunks.length >= 5) break;
   }
 
   // Bai viet: cham theo am tiet khop tieu de (x3) va noi dung (x1)
