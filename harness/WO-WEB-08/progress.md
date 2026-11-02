@@ -12,3 +12,33 @@
 ## Điểm nghẽn cần Marley/Maco xử lý qua Supabase SQL Editor
 
 - Việc xóa đoạn và cấp/thu hồi EXECUTE của hàm add_bot_chunk chỉ thực hiện được bằng SQL trên Supabase (khóa anon chỉ đọc; service_role key do Maco giữ trong Vercel, không dùng ở lượt này theo đúng tuyến WO-WEB-07). Trình tự: chạy dot4a, báo Marley để chạy load_wo_web_08.py bằng khóa anon công khai, chạy dot4b ngay sau đó, rồi kiểm chứng live 5 câu (a)-(e). Kiểm chứng live trên widget website cần phiên trình duyệt của Marley.
+
+## Hoàn tất chuỗi nạp (Marley điều phối, 02/11/2026)
+- 08:44–08:46: chạy sql/dot4a qua Supabase SQL Editor (trình duyệt): còn đúng 204 đoạn (NQ-104-2022: 6, QD-1575-2023: 35, QD-2780-2025: 86, TT-13-2026: 45, TT-51-2017: 32); LUAT-03-2007, ND-13-2024, ND-104-2016 đã gỡ.
+- Chạy loader/load_wo_web_08.py bằng khóa anon công khai: ok=105, fail=0.
+- 08:49–08:51: chạy sql/dot4b: đã thu hồi EXECUTE của anon; đếm cuối khớp tuyệt đối, tổng 309 đoạn (LUAT-114-2025: 68, ND-104-2016: 6, ND-165-2026: 31, NQ-104-2022: 6, QD-1575-2023: 35, QD-2780-2025: 86, TT-13-2026: 45, TT-51-2017: 32).
+- Kiểm chứng live qua POST /api/chat (www): (b) điều kiện cơ sở ĐẠT (Điều 49 NĐ 165 + Điều 11, Điều 10 NĐ 104 kèm ghi chú còn hiệu lực đến 30/6/2027); (c) phản vệ ĐẠT (TT 51/2017); (d) Luật Phòng bệnh ĐẠT (Luật 114/2025, Điều 51 NĐ 165); (e) lịch tiêm 18/24/25, giờ 7:30–16:30, sàng lọc khẩn cấp rule-emergency 0203.3822.115 đều ĐẠT.
+- (a) CHƯA ỔN ĐỊNH: cách hỏi "Danh mục các bệnh phải tiêm chủng bắt buộc gồm những bệnh nào?" ĐẠT đủ 14 bệnh theo Điều 3 TT 13/2026; cách hỏi gốc của WO-WEB-07 chỉ dừng ở khung Điều 22 Luật 114 (không liệt kê); cách hỏi nêu đích danh TT 13/2026 không lấy được Điều 3. Nguyên nhân: truy xuất cạnh tranh sau khi thêm đoạn Luật 114/NĐ 165, đúng nguy cơ đã ghi ở mục dự phòng. Phương án dự phòng: PR tinh chỉnh truy xuất ở lượt riêng, chờ Maco duyệt.
+- Hồ sơ: nhánh dot-2/wo-web-08-kho-tiem-chung (commit a734a1d) đã push; PR chưa mở vì gh CLI trên máy chưa đăng nhập.
+
+## Lượt tinh chỉnh truy xuất (Maco duyệt 09:04 ngày 02/11/2026)
+
+Chẩn đoán trên tập 309 đoạn (mô phỏng offline sao chép trung thực thuật toán route /api/chat: ứng viên = hợp các truy vấn ILIKE limit 12 theo từng đơn vị, IDF qua đếm REST, khử trùng theo Điều, chọn top 4):
+
+1. Cách hỏi nêu đích danh "Thông tư 13/2026/TT-BYT": các mảnh mã văn bản (thông, tư, 13, 2026, tt, byt, trẻ, phải) chiếm trọn trần 8 âm tiết chủ đề; các âm tiết nội dung (tiêm, chủng, bắt, buộc, bệnh) ở vị trí 9-13 bị cắt. Điều 3 TT 13/2026 chỉ đạt 4,90 điểm, hạng 124 toàn tập (hạng 48 trong pool ứng viên) — thắng thua nằm ở nhiễu chuỗi trích dẫn.
+2. Cách hỏi gốc WO-WEB-07: Điều 3 đạt 53,66 điểm, hạng 5 trong pool, thua vị trí chọn cuối 3,22 điểm. Nguyên nhân: Điều 3 nêu mỗi cụm khóa đúng một lần (điểm bị giới hạn ở mức xuất hiện 1), trong khi các đoạn thủ tục dài 1.200 ký tự lặp lại cụm khóa hai lần (chênh khoảng 22 điểm); thêm cụm 2 âm tiết "ma" hình thành ngang qua từ dừng đã bị loại ("buộc quy" từ "bắt buộc theo quy định").
+3. Cách hỏi "Danh mục..." đạt nhưng mong manh: Điều 3 đồng điểm 70,6 với Điều 1 ở vị trí chọn cuối.
+
+Phương án chọn (biến thể đạt toàn bộ cổng offline, không đổi dữ liệu, không đổi prompt, không hardcode câu hỏi/văn bản):
+
+- Tách mã tham chiếu: token chứa chữ số kèm "/" hoặc "-" (ví dụ 13/2026/TT-BYT) hoặc token toàn chữ số được coi là mã văn bản — âm tiết của chúng không chiếm trần 8 âm tiết chủ đề; cặp số đầu (ví dụ 13/2026) dùng để nhận diện văn bản được nêu đích danh: mọi đoạn của văn bản đó vào pool ứng viên và được cộng điểm phẳng 3 × log(1 + tổng số đoạn / số đoạn của văn bản). Câu không chứa mã thì hành vi giữ nguyên như cũ.
+- Điểm tiêu đề Điều: đoạn có mốc mở Điều/Mục/Chương/Phần trong 400 ký tự đầu (kể cả khi đoạn mở đầu bằng ghi chú hiệu lực chèn trước, như 6 đoạn NĐ 104/2016 giữ lại) được cộng thêm w × mult × 1 cho mỗi đơn vị truy xuất xuất hiện trong vùng tiêu đề — vùng tiêu đề tính đến mốc liệt kê " 1. " đầu tiên (tối đa 160 ký tự), hoặc 64 ký tự đầu nếu Điều không có mốc liệt kê.
+
+Kết quả cổng offline (nhóm đoạn được chọn sau tinh chỉnh):
+- 3 cách hỏi danh mục bệnh: Điều 3 TT 13/2026 đều vào nhóm chọn (hạng 2, 2 và 4; điểm 134,8 / 95,4 / 73,8).
+- Điều kiện cơ sở (2 cách hỏi): giữ Điều 49 NĐ 165/2026 và các Điều 9, 10, 11 NĐ 104/2016 trong nhóm chọn; cách hỏi đã kiểm chứng live giữ nguyên đúng tập đoạn chọn như trước.
+- Phản vệ (2 cách hỏi): cả 4 vị trí đầu đều thuộc TT 51/2017.
+- Luật Phòng bệnh (2 cách hỏi): đều có đoạn Luật 114/2025/QH15 trong nhóm chọn.
+- Lịch tiêm của Trạm và giờ làm việc: tập đoạn chọn giống hệt trước tinh chỉnh.
+
+Mã nguồn ở nhánh riêng dot-2/wo-web-08-tinh-chinh-truy-xuat (chỉ sửa src/app/api/chat/route.ts, phần truy xuất bot_chunks; phần bài viết giữ nguyên). Kiểm chứng live sau gộp sẽ bổ sung vào mục này.

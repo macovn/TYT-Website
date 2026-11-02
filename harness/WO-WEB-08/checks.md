@@ -4,13 +4,22 @@
 |---|---|---|---|
 | 1 | Sao lưu toàn bộ bot_chunks trước thay đổi, đếm khớp 321 đoạn theo từng văn bản | pass | ~/workspace/backups/bot-chunks-backup-20261102-wo-web-08.json: LUAT-03-2007: 71, ND-104-2016: 40, ND-13-2024: 6, NQ-104-2022: 6, TT-13-2026: 45, TT-51-2017: 32, QD-1575-2023: 35, QD-2780-2025: 86 |
 | 2 | File nguồn mới lưu vào kho-tri-thuc-an/tiem-chung + cắt đoạn đúng chuẩn WO-WEB-07 | pass (phần chuẩn bị) | Luật 114/2025: 68 đoạn (đủ Điều 21, 22, 45). NĐ 165/2026: cắt đúng 16 Điều trong phạm vi (Điều 5, 26, Mục 5 Điều 48-58, Điều 94, 95, 96) thành 31 đoạn từ toàn văn Công báo số 300, đối chiếu điểm bản ký số |
-| 3 | Gỡ LUAT-03-2007, ND-13-2024; ND-104-2016 chỉ còn Điều 9, 10, 11 kèm ghi chú chuyển tiếp | pending (chờ SQL Editor) | sql/dot4a đã soạn; gói nạp lại 6 đoạn ND-104 (ord 13-18 của bản sao lưu, ghi chú chèn vào đoạn đầu mỗi Điều, dài tối đa 1.458 ký tự, dưới trần 2.000 của hàm nạp) đã sẵn sàng trong chunks_wo_web_08.json |
-| 4 | Nạp đoạn Luật 114/2025 + NĐ 165/2026; đếm lại khớp từng văn bản; thu hồi quyền ghi anon | pending (chờ SQL Editor) | Gói nạp 105 đoạn (LUAT-114-2025: 68, ND-165-2026: 31, ND-104-2016: 6) + load_wo_web_08.py sẵn sàng; số đoạn kỳ vọng sau nạp: tổng 309 (68/31/6/6/45/32/35/86); sql/dot4b thu hồi quyền đã soạn |
-| 5 | Live (a): câu bệnh tiêm chủng bắt buộc dẫn đúng Điều 3 TT 13/2026 | pending | Chờ nạp xong |
-| 6 | Live (b): câu điều kiện cơ sở tiêm chủng dẫn căn cứ hiện hành, không trình bày NĐ 104 như còn hiệu lực toàn bộ | pending | Chờ nạp xong |
-| 7 | Live (c): câu xử trí phản vệ dẫn TT 51/2017 | pending | Chờ nạp xong |
-| 8 | Live (d): câu về phòng bệnh dẫn được Luật 114/2025 | pending | Chờ nạp xong |
-| 9 | Live (e): không hồi quy lịch tiêm chủng 18/24/25, giờ làm việc 7:30-16:30, sàng lọc khẩn cấp trả 0203.3822.115 không qua AI | pending | Chờ nạp xong |
+| 3 | Gỡ LUAT-03-2007, ND-13-2024; ND-104-2016 chỉ còn Điều 9, 10, 11 kèm ghi chú chuyển tiếp | pass | dot4a chạy 08:44-08:46 ngày 02/11/2026 qua SQL Editor; sau xóa còn đúng 204 đoạn thuộc 5 văn bản giữ lại |
+| 4 | Nạp đoạn Luật 114/2025 + NĐ 165/2026; đếm lại khớp từng văn bản; thu hồi quyền ghi anon | pass | load_wo_web_08.py: ok=105, fail=0; dot4b chạy 08:49-08:51 đã thu hồi EXECUTE của anon; đếm cuối khớp tuyệt đối: tổng 309 (68/31/6/6/45/32/35/86), LUAT-03-2007 và ND-13-2024 bằng 0 |
+| 5 | Live (a): câu bệnh tiêm chủng bắt buộc dẫn đúng Điều 3 TT 13/2026 | fail (chưa ổn định theo cách hỏi) -> đã xử lý ở lượt tinh chỉnh truy xuất, xem mục riêng bên dưới | Cách hỏi "Danh mục..." đạt đủ 14 bệnh; cách hỏi gốc WO-WEB-07 chỉ dừng ở khung Điều 22 Luật 114; cách hỏi nêu đích danh TT 13/2026 không lấy được Điều 3 |
+| 6 | Live (b): câu điều kiện cơ sở tiêm chủng dẫn căn cứ hiện hành, không trình bày NĐ 104 như còn hiệu lực toàn bộ | pass | Đáp án dẫn Điều 49 NĐ 165/2026, Điều 11 và Điều 10 NĐ 104/2016 kèm ghi chú còn hiệu lực đến hết 30/6/2027 |
+| 7 | Live (c): câu xử trí phản vệ dẫn TT 51/2017 | pass | Nguồn TT 51/2017 ở đầu, nội dung xử trí đúng |
+| 8 | Live (d): câu về phòng bệnh dẫn được Luật 114/2025 | pass | Đáp án dẫn Luật 114/2025/QH15 và Điều 51 NĐ 165/2026 |
+| 9 | Live (e): không hồi quy lịch tiêm chủng 18/24/25, giờ làm việc 7:30-16:30, sàng lọc khẩn cấp trả 0203.3822.115 không qua AI | pass | Lịch 18, 24, 25 kèm ngoại lệ; giờ Thứ 2-Thứ 6, 7:30-16:30; câu khẩn cấp trả provider rule-emergency, không qua AI |
+
+## Lượt tinh chỉnh truy xuất (Maco duyệt 09:04 ngày 02/11/2026)
+
+| # | Hạng mục | Kết quả | Bằng chứng |
+|---|---|---|---|
+| T1 | Chẩn đoán nguyên nhân tụt hạng của Điều 3 TT 13/2026 cho cả 3 cách hỏi | pass | Mô phỏng offline trung thực trên tập 309 đoạn: cách hỏi đích danh bị mã văn bản chiếm trần 8 âm tiết (Điều 3 đạt 4,90 điểm, hạng 124); cách hỏi gốc thua 3,22 điểm do đoạn liệt kê nêu cụm khóa một lần so với đoạn thủ tục lặp hai lần; cách hỏi "Danh mục..." đồng điểm ở vị trí chọn cuối |
+| T2 | Offline: cả 3 cách hỏi danh mục đều đưa Điều 3 TT 13/2026 vào nhóm chọn | pass | Hạng 2 (134,8), hạng 2 (95,4), hạng 4 (73,8) sau tinh chỉnh |
+| T3 | Offline: không hồi quy điều kiện cơ sở (giữ Điều 49 NĐ 165 + Điều 9, 10, 11 NĐ 104), phản vệ (TT 51/2017 cả 4 vị trí), Luật Phòng bệnh (có đoạn Luật 114/2025), lịch tiêm và giờ làm việc (tập đoạn chọn không đổi) | pass | Mô phỏng offline 11 câu (3 câu đích + 8 câu hồi quy), toàn bộ cổng đạt |
+| T4 | Live sau gộp PR code: 3 cách hỏi danh mục liệt kê đủ theo Điều 3 TT 13/2026 + 3 câu hồi quy (điều kiện cơ sở, phản vệ, lịch tiêm) | pending | Chờ gộp PR code và bản live Vercel cập nhật |
 
 ## Nhật ký kiểm chứng
 
