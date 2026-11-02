@@ -80,10 +80,17 @@ function syllablesOf(question: string): string[] {
 // am tiet noi dung (tiem, chung, bat, buoc...) bi cat het va doan dich
 // khong con co hoi vao nhom chon. Cap so dau cua ma (vd "13/2026") dung
 // de nhan dien van ban duoc neu dich danh trong cau hoi.
-function chunkSyllablesOf(question: string): { syl: string[]; digitGroups: string[] } {
+function chunkSyllablesOf(question: string): { syl: string[]; digitGroups: string[]; bigrams: string[] } {
   const survives = (w: string) => w.length >= 2 && !STOPWORDS.has(w);
   const topical: string[] = [];
   const digitGroups: string[] = [];
+  // WO-WEB-09: chuoi am tiet THO (chua loai tu dung) de dung cum 2 am tiet.
+  // Cum dung tu chuoi da loc (cach cu) bi dut khi mot am tiet noi dung la
+  // tu dung dung rieng: "xin" la tu dung (xin hoi) nhung lai la am tiet
+  // thu hai cua "vac xin", khien cum khoa quan trong nhat cua mien tiem
+  // chung khong bao gio thanh don vi truy xuat. Cum tho chi bi loai khi
+  // CA HAI am tiet deu la tu dung.
+  const rawPieces: string[] = [];
   for (const part of question.toLowerCase().split(/\s+/)) {
     const pieces = part.replace(/[^\p{L}\p{N}]/gu, ' ').split(/\s+/).filter(Boolean);
     const hasDigit = /\p{N}/u.test(part);
@@ -96,9 +103,23 @@ function chunkSyllablesOf(question: string): { syl: string[]; digitGroups: strin
       for (const p of pieces) if (/^\p{N}+$/u.test(p)) digitGroups.push(p);
       continue;
     }
-    for (const p of pieces) if (survives(p)) topical.push(p);
+    for (const p of pieces) {
+      if (p.length >= 2) rawPieces.push(p);
+      if (survives(p)) topical.push(p);
+    }
   }
-  return { syl: Array.from(new Set(topical)).slice(0, 8), digitGroups };
+  const rawBigrams: string[] = [];
+  for (let i = 0; i + 1 < rawPieces.length; i++) {
+    const a = rawPieces[i];
+    const b = rawPieces[i + 1];
+    if (STOPWORDS.has(a) && STOPWORDS.has(b)) continue;
+    rawBigrams.push(`${a} ${b}`);
+  }
+  return {
+    syl: Array.from(new Set(topical)).slice(0, 8),
+    digitGroups,
+    bigrams: Array.from(new Set(rawBigrams)).slice(0, 12),
+  };
 }
 
 type Source = { title: string; url: string };
@@ -118,60 +139,64 @@ async function retrieveContext(question: string) {
   // Doan phap luat cham theo am tiet chu de da tach ma van ban (WO-WEB-08);
   // bai viet ben duoi van dung syl goc nhu truoc.
   const chunkSyl = chunkSyllablesOf(question);
-  const bigrams = chunkSyl.syl.slice(0, -1).map((a, i) => `${a} ${chunkSyl.syl[i + 1]}`);
   const units = [
-    ...bigrams.map((u) => ({ u, mult: 3 })),
+    ...chunkSyl.bigrams.map((u) => ({ u, mult: 3 })),
     ...chunkSyl.syl.map((u) => ({ u, mult: 1 })),
   ];
 
-  const { count: totalCount } = await sb
+  // WO-WEB-09: cham tren TOAN BO bang bot_chunks thay vi pool ung vien
+  // 12 doan/don vi cua truy van ILIKE. Pool cu phu thuoc thu tu quet bang
+  // khong xac dinh cua PostgREST (khong ORDER BY): cung mot cau hoi, doan
+  // dich co luc vao pool co luc khong, nen ket qua truy xuat live dao dong
+  // du du lieu khong doi (su co cau hoi "loai vac xin trong TCMR" ngay
+  // 02/11/2026). Bang chi co vai tram doan nen tai mot lan va cham cuc bo:
+  // IDF dem tren cung tap nay, tuong duong cac truy van dem truoc day.
+  const { data: allRows } = await sb
     .from('bot_chunks')
-    .select('id', { count: 'exact', head: true });
-  const TOTAL = totalCount && totalCount > 0 ? totalCount : 321;
+    .select('id, doc_code, doc_title, section, content')
+    .order('ord', { ascending: true })
+    .limit(1000);
+  const rows = ((allRows || []) as any[]).map((r) => ({
+    ...r,
+    _cl: (r.content || '').toLowerCase(),
+    _sl: (r.section || '').toLowerCase(),
+  }));
+  const TOTAL = rows.length > 0 ? rows.length : 321;
 
-  const perUnit = await Promise.all(
-    units.map(async ({ u, mult }) => {
-      const [{ count }, { data }] = await Promise.all([
-        sb.from('bot_chunks').select('id', { count: 'exact', head: true }).ilike('content', `%${u}%`),
-        sb.from('bot_chunks').select('id, doc_title, section, content').ilike('content', `%${u}%`).limit(12),
-      ]);
-      const w = Math.log(1 + TOTAL / Math.max(1, count || 0));
-      return { u, mult, w, rows: (data || []) as any[] };
-    })
-  );
-
-  const cmap = new Map<string, any>();
-  perUnit.forEach((pu) => pu.rows.forEach((r) => cmap.set(r.id, r)));
+  const perUnit = units.map(({ u, mult }) => {
+    const count = rows.reduce((n, r) => n + (r._cl.includes(u) ? 1 : 0), 0);
+    const w = Math.log(1 + TOTAL / Math.max(1, count));
+    return { u, mult, w };
+  });
 
   // Van ban duoc neu dich danh trong cau hoi (cap so dau cua ma, vd
-  // "13/2026"): moi doan cua van ban do deu vao pool ung vien, vi truy van
-  // theo cum tu chi lay 12 doan dau moi don vi nen doan dich co the khong
-  // lo dien; cac doan nay duoc cong diem phang o buoc cham ben duoi.
+  // "13/2026"): cac doan cua van ban do duoc cong diem phang o buoc cham
+  // ben duoi (WO-WEB-08; nay loc cuc bo tren tap da tai thay vi truy van
+  // rieng, hanh vi khong doi).
   const namedTitles = new Set<string>();
   const namedCount = new Map<string, number>();
   if (chunkSyl.digitGroups.length >= 2) {
     const pair = `${chunkSyl.digitGroups[0]}/${chunkSyl.digitGroups[1]}`;
-    const { data: namedRows } = await sb
-      .from('bot_chunks')
-      .select('id, doc_title, section, content')
-      .ilike('doc_title', `%${pair}%`);
-    for (const r of (namedRows || []) as any[]) {
-      namedTitles.add(r.doc_title as string);
-      namedCount.set(r.doc_title as string, (namedCount.get(r.doc_title as string) || 0) + 1);
-      cmap.set(r.id, r);
+    for (const r of rows) {
+      if (((r.doc_title as string) || '').toLowerCase().includes(pair)) {
+        namedTitles.add(r.doc_title as string);
+        namedCount.set(r.doc_title as string, (namedCount.get(r.doc_title as string) || 0) + 1);
+      }
     }
   }
-  const scored = Array.from(cmap.values())
+  const scored = rows
     .map((c) => {
-      const cl = (c.content || '').toLowerCase();
-      const sl = (c.section || '').toLowerCase();
+      const cl = c._cl as string;
+      const sl = c._sl as string;
       let score = 0;
       // Vung tieu de cua doan (WO-WEB-08): moc mo Dieu/Muc/Chuong/Phan trong
       // 400 ky tu dau (doan mo dau bang ghi chu hieu luc chen truoc van tim
       // thay moc sau phan ghi chu), tinh den moc liet ke " 1. " dau tien
       // (toi da 160 ky tu); Dieu khong co moc liet ke thi lay 64 ky tu ke
-      // tu moc. Don vi khop trong vung tieu de duoc cong them w * mult * 1,
-      // vi tieu de Dieu noi dung luong cua ca doan trong vai cum tu.
+      // tu moc. WO-WEB-09: don vi khop trong vung tieu de duoc cong them
+      // w * mult * 2 (truoc la * 1), vi tieu de Dieu noi dung luong cua ca
+      // doan trong vai cum tu va la tin hieu manh nhat cho doan liet ke
+      // ngan (moi cum khoa chi xuat hien mot lan trong than doan).
       let head = '';
       const hm = cl.slice(0, 400).match(/(điều|mục|chương|phần)\s+\d+\s*\./);
       if (hm && typeof hm.index === 'number') {
@@ -184,22 +209,36 @@ async function retrieveContext(question: string) {
         const inSection = sl.includes(pu.u);
         const inHead = head !== '' && head.includes(pu.u);
         if (occ > 0 || inSection || inHead)
-          score += pu.w * pu.mult * (occ + (inSection ? 2 : 0) + (inHead ? 1 : 0));
+          score += pu.w * pu.mult * (occ + (inSection ? 2 : 0) + (inHead ? 2 : 0));
       }
       if (namedTitles.has(c.doc_title as string)) {
         score += 3 * Math.log(1 + TOTAL / Math.max(1, namedCount.get(c.doc_title as string) || 1));
       }
-      return { doc_title: c.doc_title as string, section: (c.section || '') as string, content: c.content as string, score };
+      return {
+        doc_code: (c.doc_code || c.doc_title) as string,
+        doc_title: c.doc_title as string,
+        section: (c.section || '') as string,
+        content: c.content as string,
+        score,
+      };
     })
     .filter((c) => c.score > 1)
     .sort((a, b) => b.score - a.score);
 
+  // WO-WEB-09: moi van ban toi da 3 doan trong nhom chon. Mot muc dai cua
+  // mot van ban (vd Muc 5 Nghi dinh 165/2026) co the chiem ca 4 vi tri vi
+  // cac doan lien tiep dung chung tu vung; gioi han nay giu cho doan dich
+  // cua van ban khac con cho, nhung van cho phep mot van ban chuyen sau
+  // (vd Thong tu 51/2017 ve phan ve) giu 3 vi tri dau.
   const chunks: typeof scored = [];
   const seenSection = new Set<string>();
+  const docPicked = new Map<string, number>();
   for (const c of scored) {
     const k = `${c.doc_title}|${c.section}`;
     if (seenSection.has(k)) continue;
+    if ((docPicked.get(c.doc_code) || 0) >= 3) continue;
     seenSection.add(k);
+    docPicked.set(c.doc_code, (docPicked.get(c.doc_code) || 0) + 1);
     chunks.push(c);
     if (chunks.length >= 4) break;
   }
