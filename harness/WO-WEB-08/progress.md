@@ -42,3 +42,14 @@ Kết quả cổng offline (nhóm đoạn được chọn sau tinh chỉnh):
 - Lịch tiêm của Trạm và giờ làm việc: tập đoạn chọn giống hệt trước tinh chỉnh.
 
 Mã nguồn ở nhánh riêng dot-2/wo-web-08-tinh-chinh-truy-xuat (chỉ sửa src/app/api/chat/route.ts, phần truy xuất bot_chunks; phần bài viết giữ nguyên). Kiểm chứng live sau gộp sẽ bổ sung vào mục này.
+
+## Kiểm chứng live sau gộp PR #36 (Marley, 02/11/2026, T4)
+- PR hồ sơ #35 (merge 58eb466) và PR code #36 (merge 01a039e) đã gộp lúc 11:37–11:39 ngày 02/11/2026.
+- Kiểm chứng live qua POST https://www.tramytecaibau.com/api/chat sau khi bản live cập nhật, 6/6 câu ĐẠT:
+  - T1 cách hỏi gốc WO-WEB-07: Điều 3 TT 13/2026 vào nguồn, liệt kê đủ 14 mục.
+  - T2 "Danh mục các bệnh...": ĐẠT đủ danh mục Điều 3.
+  - T3 nêu đích danh TT 13/2026: Điều 3 vào nguồn, liệt kê đủ.
+  - R1 điều kiện cơ sở: Điều 49 NĐ 165 + Điều 11 NĐ 104 kèm ghi chú còn hiệu lực đến 30/6/2027 + Điều 10, không hồi quy.
+  - R2 phản vệ: 4/4 nguồn đầu đều TT 51/2017.
+  - R3 lịch tiêm: 18, 24, 25 hằng tháng, trừ Thứ 7, Chủ nhật, lễ, Tết.
+- WO-WEB-08 đóng toàn bộ: dữ liệu, tinh chỉnh truy xuất, kiểm chứng live.
