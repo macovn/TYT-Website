@@ -73,6 +73,34 @@ function syllablesOf(question: string): string[] {
   return Array.from(new Set(toks)).slice(0, 8);
 }
 
+// WO-WEB-08 (tinh chinh truy xuat): tach ma so van ban khoi am tiet chu de.
+// Token chua chu so kem "/" hoac "-" (vd "13/2026/TT-BYT" trong cau hoi
+// "Theo Thong tu 13/2026/TT-BYT...") hoac token toan chu so la ma tham
+// chieu, khong phai noi dung chu de: de chung chiem tran 8 am tiet thi cac
+// am tiet noi dung (tiem, chung, bat, buoc...) bi cat het va doan dich
+// khong con co hoi vao nhom chon. Cap so dau cua ma (vd "13/2026") dung
+// de nhan dien van ban duoc neu dich danh trong cau hoi.
+function chunkSyllablesOf(question: string): { syl: string[]; digitGroups: string[] } {
+  const survives = (w: string) => w.length >= 2 && !STOPWORDS.has(w);
+  const topical: string[] = [];
+  const digitGroups: string[] = [];
+  for (const part of question.toLowerCase().split(/\s+/)) {
+    const pieces = part.replace(/[^\p{L}\p{N}]/gu, ' ').split(/\s+/).filter(Boolean);
+    const hasDigit = /\p{N}/u.test(part);
+    const isCode =
+      hasDigit &&
+      (/[/-]/.test(part) ||
+        (/^[\p{L}\p{N}.,;:()]+$/u.test(part) &&
+          /^\p{N}+$/u.test(part.replace(/[^\p{L}\p{N}]/gu, ''))));
+    if (isCode) {
+      for (const p of pieces) if (/^\p{N}+$/u.test(p)) digitGroups.push(p);
+      continue;
+    }
+    for (const p of pieces) if (survives(p)) topical.push(p);
+  }
+  return { syl: Array.from(new Set(topical)).slice(0, 8), digitGroups };
+}
+
 type Source = { title: string; url: string };
 
 // WO-WEB-07: Truy xuat kho phap luat bang cum 2 am tiet + trong so IDF.
@@ -87,10 +115,13 @@ async function retrieveContext(question: string) {
   const syl = syllablesOf(question);
   if (syl.length === 0) return empty;
 
-  const bigrams = syl.slice(0, -1).map((a, i) => `${a} ${syl[i + 1]}`);
+  // Doan phap luat cham theo am tiet chu de da tach ma van ban (WO-WEB-08);
+  // bai viet ben duoi van dung syl goc nhu truoc.
+  const chunkSyl = chunkSyllablesOf(question);
+  const bigrams = chunkSyl.syl.slice(0, -1).map((a, i) => `${a} ${chunkSyl.syl[i + 1]}`);
   const units = [
     ...bigrams.map((u) => ({ u, mult: 3 })),
-    ...syl.map((u) => ({ u, mult: 1 })),
+    ...chunkSyl.syl.map((u) => ({ u, mult: 1 })),
   ];
 
   const { count: totalCount } = await sb
@@ -111,15 +142,52 @@ async function retrieveContext(question: string) {
 
   const cmap = new Map<string, any>();
   perUnit.forEach((pu) => pu.rows.forEach((r) => cmap.set(r.id, r)));
+
+  // Van ban duoc neu dich danh trong cau hoi (cap so dau cua ma, vd
+  // "13/2026"): moi doan cua van ban do deu vao pool ung vien, vi truy van
+  // theo cum tu chi lay 12 doan dau moi don vi nen doan dich co the khong
+  // lo dien; cac doan nay duoc cong diem phang o buoc cham ben duoi.
+  const namedTitles = new Set<string>();
+  const namedCount = new Map<string, number>();
+  if (chunkSyl.digitGroups.length >= 2) {
+    const pair = `${chunkSyl.digitGroups[0]}/${chunkSyl.digitGroups[1]}`;
+    const { data: namedRows } = await sb
+      .from('bot_chunks')
+      .select('id, doc_title, section, content')
+      .ilike('doc_title', `%${pair}%`);
+    for (const r of (namedRows || []) as any[]) {
+      namedTitles.add(r.doc_title as string);
+      namedCount.set(r.doc_title as string, (namedCount.get(r.doc_title as string) || 0) + 1);
+      cmap.set(r.id, r);
+    }
+  }
   const scored = Array.from(cmap.values())
     .map((c) => {
       const cl = (c.content || '').toLowerCase();
       const sl = (c.section || '').toLowerCase();
       let score = 0;
+      // Vung tieu de cua doan (WO-WEB-08): moc mo Dieu/Muc/Chuong/Phan trong
+      // 400 ky tu dau (doan mo dau bang ghi chu hieu luc chen truoc van tim
+      // thay moc sau phan ghi chu), tinh den moc liet ke " 1. " dau tien
+      // (toi da 160 ky tu); Dieu khong co moc liet ke thi lay 64 ky tu ke
+      // tu moc. Don vi khop trong vung tieu de duoc cong them w * mult * 1,
+      // vi tieu de Dieu noi dung luong cua ca doan trong vai cum tu.
+      let head = '';
+      const hm = cl.slice(0, 400).match(/(điều|mục|chương|phần)\s+\d+\s*\./);
+      if (hm && typeof hm.index === 'number') {
+        const rest = cl.slice(hm.index);
+        const hIdx = rest.search(/\s1\.\s/);
+        head = hIdx > 10 ? rest.slice(0, Math.min(hIdx, 160)) : rest.slice(0, 64);
+      }
       for (const pu of perUnit) {
         const occ = Math.min(cl.split(pu.u).length - 1, 2);
         const inSection = sl.includes(pu.u);
-        if (occ > 0 || inSection) score += pu.w * pu.mult * (occ + (inSection ? 2 : 0));
+        const inHead = head !== '' && head.includes(pu.u);
+        if (occ > 0 || inSection || inHead)
+          score += pu.w * pu.mult * (occ + (inSection ? 2 : 0) + (inHead ? 1 : 0));
+      }
+      if (namedTitles.has(c.doc_title as string)) {
+        score += 3 * Math.log(1 + TOTAL / Math.max(1, namedCount.get(c.doc_title as string) || 1));
       }
       return { doc_title: c.doc_title as string, section: (c.section || '') as string, content: c.content as string, score };
     })
