@@ -377,6 +377,41 @@ async function callGemini(system: string, history: { role: string; content: stri
   }
 }
 
+// WO-WEB-12: nen thoi gian cho Bot An. May chu tinh ngay hien tai theo mui
+// gio Asia/Bangkok va ba dot tiem du kien theo lich co dinh (ngay 18, 24, 25
+// hang thang, loai tru Thu 7 va Chu nhat; dot dau tien tu hom nay tro di).
+// Day la ngay DU KIEN theo lich co dinh, khong phai ngay da xac nhan to
+// chuc; ky luat khang dinh nam trong prompt he thong (bot-knowledge.ts).
+const WEEKDAY_VI = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+
+function buildScheduleLines(now: Date = new Date()): string {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Bangkok',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+  }).formatToParts(now);
+  const get = (t: string) => Number(parts.find((x) => x.type === t)?.value || 0);
+  const ty = get('year');
+  const tm = get('month');
+  const td = get('day');
+  const weekdayOf = (y: number, m: number, d: number) => new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+  const sessions: string[] = [];
+  for (let off = 0; off < 4 && sessions.length < 3; off++) {
+    const m0 = tm - 1 + off;
+    const y = ty + Math.floor(m0 / 12);
+    const m = (m0 % 12) + 1;
+    for (const d of [18, 24, 25]) {
+      if (sessions.length >= 3) break;
+      if (off === 0 && d < td) continue;
+      const wd = weekdayOf(y, m, d);
+      if (wd === 0 || wd === 6) continue;
+      sessions.push(`${WEEKDAY_VI[wd]} ngày ${d}/${m}/${y}`);
+    }
+  }
+  return `- Hôm nay là ${WEEKDAY_VI[weekdayOf(ty, tm, td)]}, ngày ${td}/${tm}/${ty}.\n- Ba đợt tiêm dự kiến theo lịch cố định sắp tới: ${sessions.join('; ')}.`;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => null);
@@ -413,7 +448,7 @@ export async function POST(request: Request) {
 
     // 3) Truy xuất bài viết liên quan + gọi AI.
     const { context, sources } = await retrieveContext(lastUser);
-    const system = buildSystemPrompt(context);
+    const system = buildSystemPrompt(context, buildScheduleLines());
     let reply = '';
     let provider = '';
     try {
