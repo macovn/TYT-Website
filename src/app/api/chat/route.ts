@@ -884,6 +884,71 @@ function findForeignStationPhone(reply: string): string | null {
 const FACILITY_NOTE =
   '\n\nLƯU Ý AN TOÀN TỪ HỆ THỐNG: trong hội thoại này, người dân đã nêu một sự kiện nguy hiểm và hiện cho biết người bệnh đang ở cơ sở y tế hoặc đang được nhân viên y tế chăm sóc trực tiếp. Nếu người dân báo dấu hiệu xấu đi, không hướng dẫn gọi 115 như trường hợp chưa được chăm sóc; hãy hướng dẫn báo ngay cho nhân viên y tế đang theo dõi và làm theo chỉ dẫn của họ, đồng thời giữ thái độ khẩn trương, nghiêm túc.';
 
+// WO-WEB-16: thang kiểm soát độ dài theo Mục 3 Báo cáo chỉnh lý. Bỏ
+// hẳn cắt cơ học: đo số từ, viết lại đúng một lần bằng chính nhà cung
+// cấp vừa trả lời, chỉ dùng bản viết lại khi qua kiểm tra bảo toàn
+// xác định; mọi trường hợp còn lại giữ nguyên bản gốc và ghi cờ.
+const WORD_CAP = 300;
+function countWords(t: string): number {
+  const s = t.trim();
+  return s ? s.split(/\s+/).length : 0;
+}
+function extractPhoneSeqs(t: string): string[] {
+  const out: string[] = [];
+  const re = /(?:\+?84|0)(?:[\s.\-]?\d){8,10}/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(t)) !== null) {
+    const digits = m[0].replace(/\D/g, '');
+    if (digits.length >= 9 && digits.length <= 11) out.push(digits);
+  }
+  return Array.from(new Set(out));
+}
+function countListLines(t: string): number {
+  return t
+    .split('\n')
+    .filter((l) => /^\s*(?:[-*•]|\d+[.)])\s/.test(l)).length;
+}
+const DANGER_TERMS_FOLDED = [
+  'khó thở',
+  'co giật',
+  'tím môi',
+  'tím tái',
+  'lơ mơ',
+  'bất tỉnh',
+  'chảy máu',
+  'sốt cao',
+  'nôn nhiều',
+  'bỏ bú',
+  'khóc thét',
+  'lạnh tay chân',
+  'nổi vân tím',
+  'thở rít',
+  'đau ngực',
+  'vã mồ hôi',
+  'sưng nề',
+  'phát ban',
+].map(foldVi);
+// Kiểm tra bảo toàn theo Mục 3 cộng Mục II.2 của Chỉ đạo: số điện
+// thoại, dòng liệt kê và dấu hiệu nguy hiểm của bản gốc phải còn đủ
+// trong bản viết lại. Không kiểm chứng được thì coi như không đạt.
+function preservationOk(orig: string, rw: string): boolean {
+  if (!rw.trim()) return false;
+  const rwSeqs = new Set(extractPhoneSeqs(rw));
+  for (const s of extractPhoneSeqs(orig)) {
+    if (!rwSeqs.has(s)) return false;
+  }
+  const lo = countListLines(orig);
+  if (lo >= 3 && countListLines(rw) < lo) return false;
+  const fo = foldVi(orig);
+  const fr = foldVi(rw);
+  for (const term of DANGER_TERMS_FOLDED) {
+    if (fo.includes(term) && !fr.includes(term)) return false;
+  }
+  return true;
+}
+const REWRITE_INSTRUCTION =
+  'Hãy viết lại câu trả lời ngay trên của bạn cho ngắn gọn, tối đa 250 từ. Giữ nguyên mọi hướng dẫn an toàn, dấu hiệu nguy hiểm, thông tin liên hệ và toàn bộ nội dung liệt kê. Chỉ trả về bản viết lại, không thêm lời dẫn.';
+
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => null);
@@ -988,6 +1053,39 @@ export async function POST(request: Request) {
         }
       }
     }
+    // 4b) WO-WEB-16: thang kiểm soát độ dài (xem khối hàm phía trên).
+    // Chỉ áp cho câu trả lời mô hình; câu trả lời xác định được miễn
+    // trừ. Chốt số điện thoại ở bước 5 luôn quét trên văn bản cuối.
+    if (provider !== 'error' && reply && reply !== FALLBACK_REPLY) {
+      const w0 = countWords(reply);
+      if (w0 > WORD_CAP) {
+        const base = provider.split('|')[0];
+        let rw = '';
+        try {
+          const rwHistory = [
+            ...history,
+            { role: 'assistant' as const, content: reply },
+            { role: 'user' as const, content: REWRITE_INSTRUCTION },
+          ];
+          rw =
+            base === 'deepseek'
+              ? await callDeepSeek(system, rwHistory)
+              : base === 'openrouter'
+                ? await callOpenRouter(system, rwHistory)
+                : await callGemini(system, rwHistory);
+        } catch {
+          rw = '';
+        }
+        const w1 = rw ? countWords(rw) : 0;
+        if (rw && w1 <= WORD_CAP && w1 < w0 && preservationOk(reply, rw)) {
+          reply = rw;
+          provider += `|rut-gon:${w0}->${w1}`;
+        } else {
+          provider += `|vuot-tran-do-dai:${w0}`;
+        }
+      }
+    }
+
     // 5) WO-WEB-15D: chốt đầu ra. Số điện thoại lạ được trình bày như
     // số liên hệ của Trạm thì thay toàn bộ câu trả lời bằng thông điệp
     // dự phòng và gắn cờ so-la-trong-tra-loi vào provider để rà soát.
