@@ -806,6 +806,45 @@ function buildRetrievalQuery(userTexts: string[]): string {
   return prev + ' ' + last;
 }
 
+// ===== WO-WEB-15D: chốt số điện thoại lạ ở đầu ra =====
+// Phạm vi bảo vệ xác định của chốt này CHỈ là số điện thoại được trình
+// bày như số liên hệ của Trạm; các nội dung chính thức khác vẫn do
+// tầng prompt bảo vệ (Mục II.4 của Chỉ đạo triển khai V1.1).
+const OFFICIAL_PHONE_DIGITS = new Set(['02033795898', '02033822115', '115']);
+const PHONE_BEFORE_PATTERNS = [
+  /(goi (ngay )?(so|den so)?|lien he (tram )?(qua|theo) so|qua so|theo so)\s*$/,
+  /(so truc|hotline|duong day nong)[^0-9]{0,30}$/,
+  /so (dien thoai|lien he) cua (tram|co so|benh vien)[^0-9]{0,15}$/,
+  /so dien thoai lien he[^0-9]{0,10}$/,
+];
+const PHONE_AFTER_PATTERNS = [
+  /^\s*(la so (dien thoai|lien he|truc)|la hotline)/,
+  /^\s*(de (nguoi dan )?(lien he|goi))/,
+];
+
+function findForeignStationPhone(reply: string): string | null {
+  const folded = foldViAligned(reply);
+  const re = /(\+?84|0)[\d][\d.\s]{7,14}\d/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(reply)) !== null) {
+    let digits = m[0].replace(/\D/g, '');
+    if (digits.startsWith('84')) digits = '0' + digits.slice(2);
+    if (OFFICIAL_PHONE_DIGITS.has(digits)) continue;
+    if (digits.length < 9 || digits.length > 11) continue;
+    const before = folded.slice(Math.max(0, m.index - 50), m.index);
+    const after = folded.slice(m.index + m[0].length, m.index + m[0].length + 30);
+    // "Trạm sẽ gọi <số>" là Trạm gọi tới số của người dân, không phải
+    // trình bày số đó như số của Trạm.
+    const stationCalling = /(se|vua|da|dang)\s+goi\s*$/.test(before);
+    const framed =
+      !stationCalling &&
+      (PHONE_BEFORE_PATTERNS.some((p) => p.test(before)) ||
+        PHONE_AFTER_PATTERNS.some((p) => p.test(after)));
+    if (framed) return m[0];
+  }
+  return null;
+}
+
 const FACILITY_NOTE =
   '\n\nLƯU Ý AN TOÀN TỪ HỆ THỐNG: trong hội thoại này, người dân đã nêu một sự kiện nguy hiểm và hiện cho biết người bệnh đang ở cơ sở y tế hoặc đang được nhân viên y tế chăm sóc trực tiếp. Nếu người dân báo dấu hiệu xấu đi, không hướng dẫn gọi 115 như trường hợp chưa được chăm sóc; hãy hướng dẫn báo ngay cho nhân viên y tế đang theo dõi và làm theo chỉ dẫn của họ, đồng thời giữ thái độ khẩn trương, nghiêm túc.';
 
@@ -878,8 +917,17 @@ export async function POST(request: Request) {
         }
       }
     }
-    await logChat(lastUser, reply, provider);
-    return NextResponse.json({ reply, provider, sources: provider === 'error' ? [] : sources });
+    // 5) WO-WEB-15D: chốt đầu ra. Số điện thoại lạ được trình bày như
+    // số liên hệ của Trạm thì thay toàn bộ câu trả lời bằng thông điệp
+    // dự phòng và gắn cờ so-la-trong-tra-loi vào provider để rà soát.
+    let finalReply = reply;
+    let finalProvider = provider;
+    if (provider !== 'error' && findForeignStationPhone(reply)) {
+      finalReply = FALLBACK_REPLY;
+      finalProvider = provider + '|so-la-trong-tra-loi';
+    }
+    await logChat(lastUser, finalReply, finalProvider);
+    return NextResponse.json({ reply: finalReply, provider: finalProvider, sources: provider === 'error' ? [] : sources });
   } catch {
     return NextResponse.json({ reply: FALLBACK_REPLY, provider: 'error', sources: [] }, { status: 200 });
   }
