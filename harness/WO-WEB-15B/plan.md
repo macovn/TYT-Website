@@ -10,6 +10,7 @@
 2. Ép chỉ kích hoạt khi đồng thời thỏa cả ba điều kiện: biến môi trường VERCEL_ENV tồn tại và khác production; biến AN_TEST_TOKEN đã đặt cho phạm vi môi trường kiểm thử (Preview); tiêu đề khớp AN_TEST_TOKEN theo phép so sánh hằng thời gian. Thiếu bất kỳ điều kiện nào, trường testProvider bị bỏ qua hoàn toàn và chuỗi dự phòng chạy như hiện hành, từng byte một.
 3. Khi kích hoạt: chỉ gọi đúng nhà cung cấp được ép, không chạy chuỗi dự phòng; lỗi thì trả thông điệp dự phòng. Nhật ký ghi provider kèm hậu tố |kiem-thu để phân biệt dữ liệu kiểm thử. Bộ lọc cấp cứu xác định và chốt số điện thoại đầu ra vẫn áp dụng như thường lệ.
 4. Triển khai kiểm thử chạy trên bản Preview của chính nhánh WO (bản xem trước bị Vercel SSO bảo vệ, chỉ truy cập được trong phiên đăng nhập của Maco). Production không bao giờ thỏa điều kiện kích hoạt vì VERCEL_ENV bằng production và AN_TEST_TOKEN không đặt ở phạm vi Production.
+Ghi nhận hạ tầng ngày 03/11/2026: ba khóa nhà cung cấp trên Vercel đang đặt phạm vi chỉ Production, nên bản Preview không có khóa để gọi mô hình. Xử lý trong phạm vi WO: tạm mở rộng phạm vi ba khóa này sang Preview để chạy bộ ca, chạy xong thì thu hẹp lại đúng trạng thái ban đầu và xóa AN_TEST_TOKEN; toàn bộ việc này được khai báo trong báo cáo trình xác nhận merge. Khóa SUPABASE_SERVICE_ROLE_KEY không đụng tới.
 
 ## Bộ ca kiểm thử (chạy đủ trên từng nhà cung cấp)
 
