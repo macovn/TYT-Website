@@ -248,6 +248,41 @@ async function retrieveContext(question: string) {
     if (chunks.length >= 5) break;
   }
 
+  // WO-WEB-15D (phần sửa truy xuất gộp theo quyết định của Maco ngày
+  // 03/11/2026): câu hỏi xin danh mục vắc xin, bệnh được tiêm miễn phí
+  // trong tiêm chủng mở rộng hoặc tiêm phòng phải luôn kèm đoạn Điều 3
+  // Thông tư 13/2026 (danh mục bệnh phải sử dụng vắc xin, sinh phẩm).
+  // Ở một số cách hỏi, đoạn này thua điểm các đoạn khớp từ "miễn phí"
+  // thuộc văn bản khác (ví dụ Điều 27 Luật Phòng bệnh về khám sàng lọc
+  // miễn phí) và rớt khỏi nhóm 5, khiến mô hình không có danh mục
+  // trong ngữ cảnh và né trả lời. Ghim xác định: chưa có thì chèn vào,
+  // thay đoạn cuối khi nhóm đã đủ 5.
+  const foldedQ = foldVi(question);
+  const catalogIntent =
+    foldedQ.includes('mien phi') &&
+    (foldedQ.includes('vac xin') ||
+      foldedQ.includes('tiem chung') ||
+      foldedQ.includes('tiem phong'));
+  const isD3 = (c: { doc_code: string; section: string }) =>
+    c.doc_code === 'TT-13-2026' && /(^|,\s)Điều 3$/.test((c.section || '').trim());
+  if (catalogIntent && !chunks.some(isD3)) {
+    const d3 =
+      scored.find(isD3) ||
+      rows
+        .filter(isD3)
+        .map((c) => ({
+          doc_code: (c.doc_code || c.doc_title) as string,
+          doc_title: c.doc_title as string,
+          section: (c.section || '') as string,
+          content: c.content as string,
+          score: 0,
+        }))[0];
+    if (d3) {
+      if (chunks.length >= 5) chunks[chunks.length - 1] = d3;
+      else chunks.push(d3);
+    }
+  }
+
   // Bai viet: cham theo am tiet khop tieu de (x3) va noi dung (x1)
   const postMap = new Map<string, any>();
   for (const w of syl) {
