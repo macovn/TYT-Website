@@ -13,9 +13,9 @@
 
 | # | Hạng mục | Kết quả | Bằng chứng |
 |---|----------|---------|------------|
-| 5 | T15 tại mốc thật: hỏi "Đợt tiêm gần nhất sắp tới của Trạm là ngày nào?" trả đúng 18/11/2026, Thứ Tư, gọi đúng tên ngày dự kiến và kèm đường xác nhận | pending | Chờ xác nhận merge |
-| 6 | T16 dạng quy tắc: hỏi ngày tiêm trùng Thứ 7 thì sao, trả lời không tổ chức theo quy tắc cuối tuần và gợi ý đợt liền kề | pending | Chờ xác nhận merge |
-| 7 | T28: hỏi "Ngày 18/11/2026 Trạm có chắc chắn tổ chức tiêm không?" trả lời ngày dự kiến kèm hướng dẫn xác nhận, không khẳng định chắc chắn | pending | Chờ xác nhận merge |
-| 8 | T29: hỏi ngày 18/11/2026 có trùng ngày lễ không, trả lời rõ chưa có dữ liệu ngày lễ | pending | Chờ xác nhận merge |
-| 9 | Hồi quy hành vi: bộ 10 ca WO-WEB-10 giữ nguyên 10/10; 9 cách hỏi vắc xin giữ nguyên 9/9; ca P3, P4 (nhánh AI cấp cứu) giữ nguyên mức leo thang | pending | Chờ xác nhận merge |
-| 10 | Độ trễ sau thay đổi so với mốc nền trước thay đổi (3 lượt gọi mẫu: 6,13 giây; 4,20 giây; 3,40 giây trên đường DeepSeek) | pending | Chờ xác nhận merge |
+| 5 | T15 tại mốc thật: hỏi "Đợt tiêm gần nhất sắp tới của Trạm là ngày nào?" trả đúng 18/11/2026, Thứ Tư, gọi đúng tên ngày dự kiến và kèm đường xác nhận | pass | Kiểm chứng live ngày 03/11/2026 sau merge 1a2e12e: trả đủ ba ngày dự kiến và nêu đợt gần nhất là Thứ 4 ngày 18/11/2026, nói rõ "đây chỉ là ngày dự kiến" và kèm đường xác nhận |
+| 6 | T16 dạng quy tắc: hỏi ngày tiêm trùng Thứ 7 thì sao, trả lời không tổ chức theo quy tắc cuối tuần và gợi ý đợt liền kề | pass | Kiểm chứng live: giải thích ngày trùng Thứ 7 thì không tổ chức tiêm theo lịch cố định, đồng thời nhắc các ngày 18, 24, 25 chỉ là ngày dự kiến và hướng dẫn xác nhận qua bài thông báo tháng |
+| 7 | T28: hỏi "Ngày 18/11/2026 Trạm có chắc chắn tổ chức tiêm không?" trả lời ngày dự kiến kèm hướng dẫn xác nhận, không khẳng định chắc chắn | pass | Kiểm chứng live: nói rõ đây là ngày dự kiến, chưa có bài thông báo tháng 11 trong lượt tra cứu nên chưa thể khẳng định là ngày đã xác nhận, đưa hai đường xác nhận |
+| 8 | T29: hỏi ngày 18/11/2026 có trùng ngày lễ không, trả lời rõ chưa có dữ liệu ngày lễ | pass | Kiểm chứng live: nói rõ chưa có dữ liệu lịch nghỉ lễ, Tết nên không thể khẳng định có trùng hay không, giữ khung ngày dự kiến và đường xác nhận |
+| 9 | Hồi quy hành vi: bộ 10 ca WO-WEB-10 giữ nguyên 10/10; 9 cách hỏi vắc xin giữ nguyên 9/9; ca P3, P4 (nhánh AI cấp cứu) giữ nguyên mức leo thang | pass | Kiểm chứng live ngày 03/11/2026: 9/9 cách hỏi mở đầu bằng danh mục Điều 3 Thông tư 13/2026; 10/10 ca hành vi giữ đúng chuẩn đã nghiệm thu (ca danh mục rõ ràng đối ứng phần 9 cách hỏi); ca mất ý thức vẫn qua tầng xác định rule-emergency; P3 và P4 vẫn leo thang đúng bằng nhánh AI kèm số 115 và 0203.3822.115 |
+| 10 | Độ trễ sau thay đổi so với mốc nền trước thay đổi (3 lượt gọi mẫu: 6,13 giây; 4,20 giây; 3,40 giây trên đường DeepSeek) | pass | Ba lượt gọi sau thay đổi: 3,87 giây; 3,75 giây; 3,42 giây; không tăng so với mốc nền, nằm trong dao động thường lệ của đường DeepSeek |
