@@ -778,6 +778,18 @@ function buildRetrievalQuery(userTexts: string[]): string {
   const referential =
     last.length <= 60 || PIN_REFERENCE_MARKERS.some((mk) => folded.includes(mk));
   if (!referential) return last;
+  // Câu tham chiếu nhưng đã mang đủ thuật ngữ chủ đề của chính nó (ví
+  // dụ "thế còn chi phí thì sao") thì truy vấn bằng chính câu đó: ghép
+  // thêm câu trước làm loãng trọng tâm và đẩy đoạn đúng ra khỏi nhóm
+  // chọn, đã kiểm chứng bằng mô phỏng truy xuất trên kho thật (ca T02).
+  // Chỉ câu tham chiếu gần như không có nội dung chủ đề mới ghép câu
+  // người dùng liền trước. Khi đếm thuật ngữ chủ đề, loại các từ
+  // chức năng và chỉ định thuần túy (còn, vậy, thế, đó, này, kia, ấy)
+  // vì chúng không mang chủ đề.
+  const topicalCount = chunkSyllablesOf(last)
+    .syl.map((w) => foldViAligned(w))
+    .filter((w) => !['con', 'do', 'nay', 'kia', 'ay', 'vay', 'the'].includes(w)).length;
+  if (topicalCount >= 2) return last;
   const prev = userTexts[userTexts.length - 2];
   return prev + ' ' + last;
 }
