@@ -272,7 +272,10 @@ async function retrieveContext(question: string) {
   if (chunks.length > 0) {
     parts.push(
       'ĐOẠN VĂN BẢN PHÁP LUẬT:\n' +
-        chunks.map((c) => `[${c.doc_title} — ${c.section}] ${c.content.slice(0, 900)}`).join('\n')
+        // WO-WEB-15A: trần 1.500 ký tự để đưa toàn văn đoạn vào ngữ cảnh
+        // (đoạn dài nhất trong kho hiện hành là 1.458 ký tự); trước đây
+        // trần 900 ký tự cắt mất phần đuôi của 162 trên 309 đoạn.
+        chunks.map((c) => `[${c.doc_title} — ${c.section}] ${c.content.slice(0, 1500)}`).join('\n')
     );
   }
   if (posts.length > 0) {
