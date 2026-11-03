@@ -1,0 +1,11 @@
+# WO-WEB-14: Tiến độ
+
+## Ngày 03/11/2026 (Marley)
+
+- Maco xác nhận triển khai WO-WEB-14 lúc 10:38, sau khi WO-WEB-12 và WO-WEB-15A đã đóng.
+- Hoàn thiện tiêu chí nghiệm thu trước khi code theo Mục II.1 của Chỉ đạo: đối chiếu nguyên văn các tình huống T08, T09, T11 đến T13, T19, T24 đến T27 trong Báo cáo bổ sung và T31 đến T36 trong Báo cáo chỉnh lý; chốt sáu câu nhóm B của T26 và hai câu phủ định một phần của nhóm A.
+- Thiết kế chốt: hàm thuần scanEmergency quét toàn bộ tin nhắn người dùng từ mảng gốc, gấp dấu khi khớp, chắn phủ định theo từng vị trí khớp (cùng phân đoạn câu, tối đa 10 ký tự, chặn từ đối lập "nhưng", phủ định kép coi là khẳng định), chốt sự kiện hai tầng và máy trạng thái chăm sóc bốn mức (none, home, facility, resolved) không tự hết hạn; kích hoạt chỉ xét tín hiệu ở tin nhắn cuối để lượt bình thường sau khi sự kiện đã được đánh giá không bị kích hoạt lại bởi tín hiệu cũ.
+- Đã triển khai xong mã nguồn trên nhánh dot-2/wo-web-14-bo-loc-cap-cuu: khối scanEmergency (gấp dấu, chắn phủ định theo vị trí, chốt sự kiện hai tầng, máy trạng thái chăm sóc), thứ tự sàng lọc trước giới hạn tần suất, thông điệp 429 có số trực cấp cứu, ghi chú facility-note nối vào prompt, và hai quy tắc prompt cộng thêm trong bot-knowledge.ts.
+- Bộ kiểm thử ngoại tuyến chạy trên hàm trích nguyên văn: vòng đầu 56 trên 58, hụt hai ca: T27 mẫu "có dấu hiệu đột quỵ" bị dấu phủ định "có đâu" nhận nhầm từ cụm "có dấu hiệu", và T36 do câu mẫu dùng cấu trúc "chó nhà hàng xóm cắn" không khớp mẫu liên tục "chó cắn". Đã sửa: loại "có đâu" và "chẳng" khỏi danh sách phủ định (trùng hình thức với "có dấu hiệu" và "chàng trai", ghi rõ đánh đổi dương tính giả vào plan.md), "đâu có" chỉ công nhận ở đầu phân đoạn câu; câu mẫu T36 đổi thành cấu trúc chuẩn "Bé bị chó cắn". Chạy lại: 61 trên 61 đạt, gồm T27 đạt 29 trên 29 (qua điều kiện dừng cứng).
+- Ghi nhận cơ chế T33: trong câu "đang ở phòng cấp cứu", cụm "cấp cứu" thuộc tầng 1 làm điều kiện kích hoạt, và trạng thái facility chuyển hành động thành facility-note thay vì thông điệp gọi 115; kết quả đúng đặc tả.
+- Build đạt. Trạng thái: chờ Maco xác nhận merge theo Mục V của Chỉ đạo; kiểm chứng live (checks.md mục 9 đến 12) chạy ngay sau khi merge.

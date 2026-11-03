@@ -415,6 +415,165 @@ function buildScheduleLines(now: Date = new Date()): string {
   return `- Hôm nay là ${WEEKDAY_VI[weekdayOf(ty, tm, td)]}, ngày ${td}/${tm}/${ty}.\n- Ba đợt tiêm dự kiến theo lịch cố định sắp tới: ${sessions.join('; ')}.`;
 }
 
+// ===== WO-WEB-14: bo loc cap cuu hai tang va may trang thai su kien =====
+// Tang 1: 29 cum tu khoa EMERGENCY_KEYWORDS hien hanh. Tang 2: chot su
+// kien: mot boi canh nguy hiem (chan thuong, sau tiem, dong vat can...)
+// len chot mot su kien; dau hieu dien bien xau di o luot sau se kich hoat.
+// Trang thai cham soc (dang o co so y te / da kham va ve theo doi / da
+// giai quyet) do cac dau hieu tuong minh cua nguoi dan quyet dinh va
+// khong bao gio tu het han theo so luot hay chu de. Bo loc quet TOAN BO
+// tin nhan nguoi dung trong yeu cau (mang goc, khong qua cua so 6 tin
+// nhan cua AI) va chay TRUOC gioi han tan suat. Khop mau sau khi gap dau
+// tieng Viet nen chiu duoc loi thieu dau va nua dau.
+
+function foldVi(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd');
+}
+
+const TIER1_PATTERNS = Array.from(new Set(EMERGENCY_KEYWORDS.map(foldVi)));
+
+const CONTEXT_PATTERNS = [
+  'đập đầu', 'ngã đập', 'ngã từ', 'ngã xe', 'té xe', 'tai nạn giao thông',
+  'chấn thương đầu', 'uống nhầm', 'uống phải hóa chất', 'ăn phải hóa chất',
+  'bị bỏng', 'bỏng nước sôi', 'bỏng lửa', 'sau khi tiêm', 'sau tiêm',
+  'vừa tiêm', 'tiêm về', 'tiêm xong', 'chó cắn', 'mèo cắn', 'rắn cắn',
+  'ong đốt', 'trẻ sơ sinh sốt', 'bé sơ sinh sốt', 'sốt ở trẻ sơ sinh',
+  'mới tiêm',
+].map(foldVi);
+
+const DETERIORATION_PATTERNS = [
+  'nôn nhiều', 'nôn liên tục', 'bị nôn', 'nôn ói', 'ói mửa', 'lơ mơ',
+  'li bì', 'ngủ gà', 'ngủ lịm', 'ngủ rồi', 'ngủ nhiều', 'gọi không tỉnh',
+  'gọi không đáp', 'không tỉnh táo', 'khóc thét', 'khóc yếu', 'bỏ bú',
+  'bỏ ăn', 'mệt lả', 'người lả', 'tím tái', 'tái tím', 'khò khè',
+  'thở nhanh', 'thở gấp', 'sốt cao', 'mắt trợn', 'mềm nhũn', 'phù mặt',
+  'sưng phù mặt', 'nổi mẩn khắp người', 'phát ban khắp người',
+].map(foldVi);
+
+const FACILITY_MARKERS = [
+  'đang ở bệnh viện', 'đang ở phòng cấp cứu', 'đang nằm viện',
+  'đang được cấp cứu', 'đang ở trạm y tế', 'đang ở phòng khám',
+  'đang ở viện', 'đang truyền dịch', 'đang thở oxy',
+  'đang nằm theo dõi ở viện',
+].map(foldVi);
+
+const HOME_MARKERS = [
+  'đã đi khám', 'đã đưa đi khám', 'đã khám rồi', 'đã được khám',
+  'bác sĩ bảo không sao', 'bác sĩ nói không sao', 'bác sĩ cho về',
+  'cho về theo dõi', 'bác sĩ dặn theo dõi', 'đã xử trí rồi',
+  'đã được xử trí', 'đã băng bó rồi', 'đã khâu rồi',
+  'đã tiêm phòng dại rồi',
+].map(foldVi);
+
+const RESOLVED_MARKERS = [
+  'khỏe hẳn', 'khỏi hẳn', 'hết nôn rồi', 'hết sốt rồi', 'không sao rồi',
+  'bình thường rồi', 'ăn chơi bình thường', 'đã xử lý xong',
+  'xử lý xong rồi', 'đỡ hẳn',
+].map(foldVi);
+
+// Danh sach dong cac dau phu dinh. "chang" (chang/chang trai) va "co dau"
+// (co dau hieu) bi loai co chu dich vi trung hinh thuc voi tu thong
+// thuong, de tranh am tinh gia; cac truong hop do mac dinh kich hoat.
+// "dau co" chi duoc cong nhan khi dung o dau phan doan cau.
+const NEG_MARKERS = ['khong', 'chua'];
+
+function occurrences(text: string, patterns: string[]): number[] {
+  const out: number[] = [];
+  for (const p of patterns) {
+    let i = text.indexOf(p);
+    while (i >= 0) {
+      out.push(i);
+      i = text.indexOf(p, i + 1);
+    }
+  }
+  return out.sort((a, b) => a - b);
+}
+
+// Mot vi tri khop duoc coi la bi phu dinh khi: trong cung phan doan cau
+// (khong vuot dau cham, phay, cham phay, cham hoi, cham than, xuong dong)
+// co dau phu dinh thuoc danh sach dong ket thuc cach vi tri khop toi da
+// 10 ky tu, va giua dau phu dinh voi vi tri khop khong co tu doi lap
+// "nhung". Phu dinh kep dang "khong phai ... khong ..." la khang dinh.
+// Moi truong hop mo ho deu mac dinh KHONG phu dinh (van kich hoat).
+function isNegated(text: string, idx: number): boolean {
+  let segStart = 0;
+  for (const br of ['.', '!', '?', ';', ',', '\n']) {
+    const p = text.lastIndexOf(br, idx - 1);
+    if (p >= segStart) segStart = p + 1;
+  }
+  const seg = text.slice(segStart, idx);
+  if ((seg.match(/khong/g) || []).length >= 2 && seg.includes('phai')) return false;
+  const trimmed = seg.trimStart();
+  if (trimmed.startsWith('dau co')) {
+    const gap = trimmed.slice(6);
+    if (gap.length <= 6 && !gap.includes('nhung')) return true;
+  }
+  for (const mk of NEG_MARKERS) {
+    const j = seg.lastIndexOf(mk);
+    if (j < 0) continue;
+    const gap = seg.slice(j + mk.length);
+    if (gap.length > 10) continue;
+    if (gap.includes('nhung')) continue;
+    return true;
+  }
+  return false;
+}
+
+type EmergencyScan = { action: 'emergency' | 'facility-note' | 'none' };
+
+function scanEmergency(userTexts: string[]): EmergencyScan {
+  const texts = userTexts.map(foldVi);
+  let armed = false;
+  let care: 'none' | 'home' | 'facility' | 'resolved' = 'none';
+  let detSeen = false;
+  let fireNow = false;
+  texts.forEach((t, i) => {
+    const isLast = i === texts.length - 1;
+    const detHit = occurrences(t, DETERIORATION_PATTERNS).some((p) => !isNegated(t, p));
+    if (detHit) detSeen = true;
+    let contextHere = false;
+    const events: { pos: number; kind: string }[] = [];
+    for (const p of occurrences(t, FACILITY_MARKERS)) events.push({ pos: p, kind: 'facility' });
+    for (const p of occurrences(t, HOME_MARKERS)) events.push({ pos: p, kind: 'home' });
+    for (const p of occurrences(t, RESOLVED_MARKERS)) events.push({ pos: p, kind: 'resolved' });
+    for (const p of occurrences(t, CONTEXT_PATTERNS)) {
+      if (!isNegated(t, p)) events.push({ pos: p, kind: 'context' });
+    }
+    events.sort((a, b) => a.pos - b.pos);
+    for (const e of events) {
+      if (e.kind === 'context') {
+        armed = true;
+        care = 'none';
+        contextHere = true;
+      } else if (e.kind === 'facility') {
+        care = 'facility';
+      } else if (e.kind === 'home') {
+        care = 'home';
+      } else {
+        care = 'resolved';
+      }
+    }
+    if (isLast) {
+      const tier1Hit = occurrences(t, TIER1_PATTERNS).some((p) => !isNegated(t, p));
+      // Kich hoat chi xet tin hieu hoan tat o tin nhan cuoi: tu khoa tang 1,
+      // dien bien khi da co su kien, hoac boi canh moi noi voi dien bien
+      // da thay truoc do. Tin hieu cu trong lich su khong kich hoat lai
+      // luot hoi binh thuong ve sau.
+      if (tier1Hit || (armed && detSeen && (detHit || contextHere))) fireNow = true;
+    }
+  });
+  if (!fireNow) return { action: 'none' };
+  if (care === 'facility') return { action: 'facility-note' };
+  return { action: 'emergency' };
+}
+
+const FACILITY_NOTE =
+  '\n\nLƯU Ý AN TOÀN TỪ HỆ THỐNG: trong hội thoại này, người dân đã nêu một sự kiện nguy hiểm và hiện cho biết người bệnh đang ở cơ sở y tế hoặc đang được nhân viên y tế chăm sóc trực tiếp. Nếu người dân báo dấu hiệu xấu đi, không hướng dẫn gọi 115 như trường hợp chưa được chăm sóc; hãy hướng dẫn báo ngay cho nhân viên y tế đang theo dõi và làm theo chỉ dẫn của họ, đồng thời giữ thái độ khẩn trương, nghiêm túc.';
+
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => null);
@@ -428,19 +587,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Thiếu nội dung câu hỏi' }, { status: 400 });
     }
 
+    // 1) WO-WEB-14: sàng lọc khẩn cấp hai tầng trên toàn bộ lịch sử người
+    // dùng (mảng gốc, không qua cửa sổ 6 tin nhắn của AI), chạy trước
+    // giới hạn tần suất để câu khẩn cấp không bao giờ bị chặn bởi 429.
+    const userTexts = raw
+      .filter((m: any) => m && m.role === 'user' && typeof m.content === 'string')
+      .map((m: any) => m.content as string);
+    const scan = scanEmergency(userTexts);
+    if (scan.action === 'emergency') {
+      await logChat(lastUser, EMERGENCY_REPLY, 'rule-emergency');
+      return NextResponse.json({ reply: EMERGENCY_REPLY, provider: 'rule-emergency', sources: [] });
+    }
+
     const ip = (request.headers.get('x-forwarded-for') || 'unknown').split(',')[0].trim();
     if (rateLimited(ip)) {
       return NextResponse.json(
-        { reply: 'Anh/chị đang gửi câu hỏi quá nhanh. Vui lòng chờ ít phút rồi hỏi lại, hoặc gọi 02033.795.898 để được hỗ trợ.', provider: 'rate_limited', sources: [] },
+        { reply: 'Anh/chị đang gửi câu hỏi quá nhanh. Vui lòng chờ ít phút rồi hỏi lại, hoặc gọi 02033.795.898 để được hỗ trợ. Nếu đây là tình huống khẩn cấp, hãy gọi ngay 115 hoặc số trực cấp cứu của Trạm: 0203.3822.115.', provider: 'rate_limited', sources: [] },
         { status: 429 }
       );
-    }
-
-    // 1) Sàng lọc khẩn cấp trước mọi xử lý khác.
-    const normalized = lastUser.toLowerCase();
-    if (EMERGENCY_KEYWORDS.some((k) => normalized.includes(k))) {
-      await logChat(lastUser, EMERGENCY_REPLY, 'rule-emergency');
-      return NextResponse.json({ reply: EMERGENCY_REPLY, provider: 'rule-emergency', sources: [] });
     }
 
     // 2) Chưa cấu hình khóa AI: trả thông điệp êm.
@@ -451,7 +615,9 @@ export async function POST(request: Request) {
 
     // 3) Truy xuất bài viết liên quan + gọi AI.
     const { context, sources } = await retrieveContext(lastUser);
-    const system = buildSystemPrompt(context, buildScheduleLines());
+    const system =
+      buildSystemPrompt(context, buildScheduleLines()) +
+      (scan.action === 'facility-note' ? FACILITY_NOTE : '');
     let reply = '';
     let provider = '';
     try {
