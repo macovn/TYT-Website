@@ -8,4 +8,6 @@
 - Hai tệp nguồn tại máy làm việc khớp từng byte với nhánh chính (mã băm blob 8d48f656 cho bot-knowledge.ts và 447cb517 cho route.ts), đủ điều kiện làm nền chỉnh sửa.
 - Đã triển khai xong phần code trên nhánh dot-2/wo-web-12-nen-thoi-gian: hàm buildScheduleLines (tính ngày hiện tại theo Asia/Bangkok và ba đợt dự kiến, loại trừ cuối tuần), mục prompt THỜI GIAN HIỆN TẠI VÀ LỊCH TIÊM DỰ KIẾN kèm kỷ luật khẳng định ba loại ngày, lời gọi truyền tham số tại POST handler.
 - Kiểm chứng trước gộp: build đạt; hàm tính lịch trích nguyên văn chạy kiểm tra 5 mốc neo đạt toàn bộ; rà soát diff xác nhận phạm vi thay đổi đúng kế hoạch.
-- Trạng thái: chờ Maco xác nhận merge theo Mục V của Chỉ đạo. Các hạng mục kiểm chứng trên hệ thống thật (checks.md mục 5 đến 10) sẽ chạy ngay sau khi merge và triển khai.
+- Maco xác nhận merge lúc 10:17 ngày 03/11/2026. PR 44 đã gộp vào main (commit gộp 1a2e12eb841d193592e0f40a25f9bd7010a4b103), Vercel triển khai xong trong khoảng 2 phút.
+- Kiểm chứng live sau triển khai: toàn bộ checks.md mục 5 đến 10 đạt. T15, T16, T28, T29 đạt đúng kỷ luật khẳng định đã thiết kế; 9/9 cách hỏi vắc xin và 10/10 ca hành vi WO-WEB-10 giữ nguyên; ca an toàn P3, P4 giữ nguyên mức leo thang; độ trễ sau thay đổi 3,42 đến 3,87 giây, không tăng so với mốc nền.
+- WO-WEB-12 ĐÓNG. WO tiếp theo theo thứ tự Chỉ đạo là WO-WEB-15A (bỏ cắt 900 ký tự đoạn tri thức), chờ Maco xác nhận bắt đầu.
