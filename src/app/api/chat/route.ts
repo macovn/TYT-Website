@@ -740,19 +740,31 @@ function extractPinnedFacts(userTexts: string[]): string[] {
     }
 
     // Mốc tiêm gần nhất: lấy nguyên văn từ bản gốc tại vị trí khớp.
+    // Chỉ nhận câu trần thuật: một câu hỏi nhắc lại mẫu này (ví dụ
+    // "vừa tiêm mũi gì hôm qua") không phải mốc tiêm và tuyệt đối
+    // không được đè lên mốc thật đã nêu ở lượt trước. Lỗi này là
+    // nguyên nhân gốc của ca T20 ở kiểm chứng live đợt đầu: câu hỏi
+    // cuối hội thoại đã đè mất mốc "Đã tiêm mũi sởi hôm qua".
     const vaxRe = /(da tiem|vua tiem|moi tiem)/g;
-    let lastVax = -1;
-    while ((m = vaxRe.exec(text)) !== null) lastVax = m.index;
-    if (lastVax >= 0) {
-      const rest = original.slice((cut >= 0 ? cut : 0) + lastVax);
+    let acceptedVax = '';
+    while ((m = vaxRe.exec(text)) !== null) {
+      const rest = original.slice((cut >= 0 ? cut : 0) + m.index);
       const stopAt = rest.search(/[.!?\n]/);
       const phrase = (stopAt > 0 ? rest.slice(0, stopAt) : rest).trim();
-      if (phrase.length >= 8) {
-        found.set('last-vaccination', {
-          label: 'Mốc tiêm gần nhất đã nêu',
-          value: phrase.charAt(0).toUpperCase() + phrase.slice(1),
-        });
-      }
+      if (phrase.length < 8) continue;
+      const foldedPhrase = foldViAligned(phrase);
+      const qm = /(^|\s)(gi|nao|chua|khong)(\s|$)/.exec(foldedPhrase);
+      // Từ nghi vấn chỉ vô hiệu câu khi nằm ngay đầu cụm (dạng câu hỏi
+      // nhắc lại); từ phủ định ở cuối một câu trần thuật dài (ví dụ
+      // "đã tiêm mũi sởi hôm qua, không sốt") không làm mất mốc tiêm.
+      if (qm && qm.index < 20) continue;
+      acceptedVax = phrase;
+    }
+    if (acceptedVax) {
+      found.set('last-vaccination', {
+        label: 'Mốc tiêm gần nhất đã nêu',
+        value: acceptedVax.charAt(0).toUpperCase() + acceptedVax.slice(1),
+      });
     }
 
     found.forEach((f, key) => put(key, f.label, f.value, turn));
