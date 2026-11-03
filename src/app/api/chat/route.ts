@@ -528,7 +528,7 @@ type EmergencyScan = { action: 'emergency' | 'facility-note' | 'none' };
 function scanEmergency(userTexts: string[]): EmergencyScan {
   const texts = userTexts.map(foldVi);
   let armed = false;
-  let care: 'none' | 'home' | 'facility' | 'resolved' = 'none';
+  let inFacility = false;
   let detSeen = false;
   let fireNow = false;
   texts.forEach((t, i) => {
@@ -547,14 +547,13 @@ function scanEmergency(userTexts: string[]): EmergencyScan {
     for (const e of events) {
       if (e.kind === 'context') {
         armed = true;
-        care = 'none';
+        inFacility = false;
         contextHere = true;
       } else if (e.kind === 'facility') {
-        care = 'facility';
-      } else if (e.kind === 'home') {
-        care = 'home';
+        inFacility = true;
       } else {
-        care = 'resolved';
+        // Da kham va ve theo doi, hoac da giai quyet: khong con o co so y te.
+        inFacility = false;
       }
     }
     if (isLast) {
@@ -567,7 +566,7 @@ function scanEmergency(userTexts: string[]): EmergencyScan {
     }
   });
   if (!fireNow) return { action: 'none' };
-  if (care === 'facility') return { action: 'facility-note' };
+  if (inFacility) return { action: 'facility-note' };
   return { action: 'emergency' };
 }
 
