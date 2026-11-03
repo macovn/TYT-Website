@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { timingSafeEqual } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import {
   buildSystemPrompt,
@@ -933,8 +934,43 @@ export async function POST(request: Request) {
     const system =
       buildSystemPrompt(context, buildScheduleLines(), pinnedLines) +
       (scan.action === 'facility-note' ? FACILITY_NOTE : '');
+    // WO-WEB-15B: chế độ ép nhà cung cấp, CHỈ bật ở môi trường kiểm
+    // thử. Kích hoạt cần đồng thời: VERCEL_ENV tồn tại và khác
+    // production, AN_TEST_TOKEN đã đặt (chỉ đặt ở phạm vi Preview) và
+    // tiêu đề x-an-test-token khớp theo so sánh hằng thời gian. Thiếu
+    // bất kỳ điều kiện nào, trường testProvider bị bỏ qua và chuỗi dự
+    // phòng chạy như hiện hành. Khi ép: chỉ gọi đúng nhà cung cấp đó,
+    // không chạy chuỗi dự phòng; nhật ký gắn hậu tố |kiem-thu.
+    const testToken = process.env.AN_TEST_TOKEN || '';
+    const givenToken = request.headers.get('x-an-test-token') || '';
+    const tokenOk =
+      testToken.length > 0 &&
+      givenToken.length === testToken.length &&
+      timingSafeEqual(Buffer.from(givenToken), Buffer.from(testToken));
+    const forced =
+      process.env.VERCEL_ENV !== undefined &&
+      process.env.VERCEL_ENV !== 'production' &&
+      tokenOk &&
+      (body?.testProvider === 'deepseek' ||
+        body?.testProvider === 'openrouter' ||
+        body?.testProvider === 'gemini')
+        ? (body.testProvider as string)
+        : '';
     let reply = '';
     let provider = '';
+    if (forced) {
+      provider = forced + '|kiem-thu';
+      try {
+        reply =
+          forced === 'deepseek'
+            ? await callDeepSeek(system, history)
+            : forced === 'openrouter'
+              ? await callOpenRouter(system, history)
+              : await callGemini(system, history);
+      } catch {
+        reply = FALLBACK_REPLY;
+      }
+    } else
     try {
       reply = await callDeepSeek(system, history);
       provider = 'deepseek';
