@@ -570,6 +570,218 @@ function scanEmergency(userTexts: string[]): EmergencyScan {
   return { action: 'emergency' };
 }
 
+// ===== WO-WEB-13: lớp thông tin ghim và ngữ cảnh hóa truy vấn =====
+// Thông tin ghim được trích xác định chỉ từ tin nhắn của người dân, chỉ
+// tồn tại trong quá trình xử lý của chính lượt gọi này, không ghi vào
+// bất kỳ cơ sở dữ liệu, tệp hay nhật ký nào. Tắt hằng số dưới đây là
+// quay lui nóng toàn bộ lớp ghim và ngữ cảnh hóa truy vấn.
+const PIN_FACTS_ENABLED = true;
+
+// Gấp dấu giữ nguyên vị trí ký tự: mỗi ký tự gốc cho đúng một ký tự đã
+// gấp, để vị trí khớp trên bản gấp dùng được trên bản gốc (mốc tiêm).
+function foldViAligned(s: string): string {
+  let out = '';
+  for (const ch of s) {
+    if (ch === 'đ' || ch === 'Đ') {
+      out += 'd';
+      continue;
+    }
+    const base = ch.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    out += base.length > 0 ? base[0] : ' ';
+  }
+  return out.toLowerCase();
+}
+
+const PIN_CORRECTION_MARKERS = ['khong phai', 'noi nham', 'nham', 'sua lai', 'y em la'];
+const PIN_KINSHIP_BEFORE = ['con dau', 'chau gai', 'em gai', 'chi gai', 'vo', 'me', 'bo', 'cha', 'chi', 'anh', 'co', 'di', 'chu', 'bac'];
+const PIN_CHILD_ID_LABELS: Record<string, string> = {
+  lon: 'Bé lớn',
+  nho: 'Bé nhỏ',
+  dau: 'Bé đầu',
+  ca: 'Bé cả',
+  ut: 'Bé út',
+};
+
+type PinnedFact = { value: string; turn: number };
+
+function extractPinnedFacts(userTexts: string[]): string[] {
+  const byKey = new Map<string, PinnedFact & { label: string }>();
+  const put = (key: string, label: string, value: string, turn: number) => {
+    byKey.set(key, { label, value, turn });
+  };
+
+  userTexts.forEach((original, ui) => {
+    const turn = ui + 1;
+    const foldedFull = foldViAligned(original);
+    let text = foldedFull;
+    let prefixText = '';
+    // Dấu sửa đổi tường minh: giá trị đứng trước dấu sửa đổi cuối cùng
+    // trong tin nhắn mất hiệu lực; chỉ phần sau dấu đó được trích xuất.
+    // Chủ thể nêu ở phần trước vẫn được giữ để gắn giá trị trần nêu ở
+    // phần sau (mẫu: "Bé nhỏ em nói nhầm, là 3 tháng ạ").
+    let cut = -1;
+    for (const mk of PIN_CORRECTION_MARKERS) {
+      let i = foldedFull.indexOf(mk);
+      while (i >= 0) {
+        if (i + mk.length > cut) cut = i + mk.length;
+        i = foldedFull.indexOf(mk, i + 1);
+      }
+    }
+    if (cut >= 0) {
+      prefixText = foldedFull.slice(0, cut);
+      text = foldedFull.slice(cut);
+    }
+
+    const found = new Map<string, { label: string; value: string }>();
+
+    // Tuổi trẻ em: bắt buộc có chủ thể trẻ đi kèm. Các giá trị khác nhau
+    // cho cùng một khóa trong cùng một tin nhắn = mơ hồ, không ghim.
+    const childRe = /\b(be|chau|tre|con em|con nha|con cua|con toi|con minh)\s+(lon|nho|dau|ca|ut)?[^0-9.;!?\n]{0,14}?(\d{1,2})\s*(thang tuoi|thang|tuoi)\b/g;
+    let m: RegExpExecArray | null;
+    const childSeen = new Map<string, string>();
+    while ((m = childRe.exec(text)) !== null) {
+      if (text.slice(m.index + m[0].length, m.index + m[0].length + 4).startsWith(' nua')) continue;
+      const preDigit = m[0].slice(0, m[0].lastIndexOf(m[3]));
+      if (/\bbenh\b/.test(preDigit)) continue;
+      const num = parseInt(m[3], 10);
+      const unit = m[4];
+      if (unit === 'tuoi' && num > 18) continue;
+      if (unit !== 'tuoi' && num > 36) continue;
+      const idf = m[2] || '';
+      const key = 'child-age:' + (idf || 'chung');
+      const value = num + (unit === 'tuoi' ? ' tuổi' : ' tháng');
+      const prev = childSeen.get(key);
+      if (prev !== undefined && prev !== value) {
+        childSeen.set(key, ' mo ho');
+      } else {
+        childSeen.set(key, value);
+      }
+      if (!found.has(key) && childSeen.get(key) !== ' mo ho') {
+        found.set(key, {
+          label: idf ? PIN_CHILD_ID_LABELS[idf] : 'Bé',
+          value,
+        });
+      } else if (childSeen.get(key) === ' mo ho') {
+        found.delete(key);
+      }
+    }
+
+    // Gắn giá trị trần sau dấu sửa đổi vào chủ thể đã nêu trước dấu đó:
+    // chỉ áp dụng cho tuổi trẻ em và chỉ khi phần sau chưa tự trích
+    // được mục nào cho khóa đó.
+    if (cut >= 0 && prefixText) {
+      const bare = /(\d{1,2})\s*(thang tuoi|thang|tuoi)\b/.exec(text);
+      if (bare) {
+        const subjRe = /\b(be|chau|tre|con em|con nha|con cua|con toi|con minh)\s+(lon|nho|dau|ca|ut)?/g;
+        let sm: RegExpExecArray | null;
+        let lastSubj: RegExpExecArray | null = null;
+        while ((sm = subjRe.exec(prefixText)) !== null) lastSubj = sm;
+        if (lastSubj) {
+          const num = parseInt(bare[1], 10);
+          const unit = bare[2];
+          const inRange = unit === 'tuoi' ? num <= 18 : num <= 36;
+          if (inRange) {
+            const idf = lastSubj[2] || '';
+            const key = 'child-age:' + (idf || 'chung');
+            if (!found.has(key)) {
+              found.set(key, {
+                label: idf ? PIN_CHILD_ID_LABELS[idf] : 'Bé',
+                value: num + (unit === 'tuoi' ? ' tuổi' : ' tháng'),
+              });
+            }
+          }
+        }
+      }
+    }
+
+    // Tuổi người hỏi: chỉ khi gắn với chính người hỏi và không có từ
+    // chỉ thân thuộc đứng ngay trước (tránh bắt nhầm tuổi người thân).
+    const adultRe = /\b(em|toi|minh|ba|ong)\s+(nay\s+)?(\d{2})\s*tuoi\b/g;
+    while ((m = adultRe.exec(text)) !== null) {
+      const before = text.slice(Math.max(0, m.index - 14), m.index);
+      if (/(me|bo|cha|vo|chong|co|di|chu|bac|anh|chi|con)\s$/.test(before)) continue;
+      const num = parseInt(m[3], 10);
+      if (num < 18 || num > 95) continue;
+      found.set('adult-age:self', { label: 'Người hỏi', value: num + ' tuổi' });
+    }
+
+    // Tình trạng thai kỳ: kèm chủ thể nêu ngay trước nếu có.
+    const pregRe = /(mang thai|co thai|co bau|dang bau|bau)\s*(duoc\s*)?(\d{1,2})?\s*(tuan|thang)?/g;
+    while ((m = pregRe.exec(text)) !== null) {
+      const kw = m[1];
+      const num = m[3] ? parseInt(m[3], 10) : null;
+      const unit = m[4] || '';
+      if (kw === 'bau' && num === null) continue;
+      if (num !== null && (num < 4 || num > 45)) continue;
+      const before = text.slice(Math.max(0, m.index - 22), m.index);
+      let subject = 'Người hỏi';
+      let bestPos = -1;
+      for (const kin of PIN_KINSHIP_BEFORE) {
+        const p = before.lastIndexOf(kin);
+        if (p > bestPos) {
+          bestPos = p;
+          subject = kin;
+        }
+      }
+      const KIN_DISPLAY: Record<string, string> = {
+        'con dau': 'con dâu', 'chau gai': 'cháu gái', 'em gai': 'em gái',
+        'chi gai': 'chị gái', vo: 'vợ', me: 'mẹ', bo: 'bố', cha: 'cha',
+        chi: 'chị', anh: 'anh', co: 'cô', di: 'dì', chu: 'chú', bac: 'bác',
+      };
+      const label =
+        subject === 'Người hỏi'
+          ? 'Thai kỳ của người hỏi'
+          : 'Thai kỳ (' + (KIN_DISPLAY[subject] || subject) + ')';
+      const value =
+        num !== null
+          ? 'đang mang thai ' + num + (unit === 'tuan' ? ' tuần' : ' tháng')
+          : 'đang mang thai (chưa rõ số tuần)';
+      found.set('pregnancy:' + subject, { label, value });
+    }
+
+    // Mốc tiêm gần nhất: lấy nguyên văn từ bản gốc tại vị trí khớp.
+    const vaxRe = /(da tiem|vua tiem|moi tiem)/g;
+    let lastVax = -1;
+    while ((m = vaxRe.exec(text)) !== null) lastVax = m.index;
+    if (lastVax >= 0) {
+      const rest = original.slice((cut >= 0 ? cut : 0) + lastVax);
+      const stopAt = rest.search(/[.!?\n]/);
+      const phrase = (stopAt > 0 ? rest.slice(0, stopAt) : rest).trim();
+      if (phrase.length >= 8) {
+        found.set('last-vaccination', {
+          label: 'Mốc tiêm gần nhất đã nêu',
+          value: phrase.charAt(0).toUpperCase() + phrase.slice(1),
+        });
+      }
+    }
+
+    found.forEach((f, key) => put(key, f.label, f.value, turn));
+  });
+
+  const lines = Array.from(byKey.values())
+    .sort((a, b) => b.turn - a.turn)
+    .slice(0, 6)
+    .sort((a, b) => a.turn - b.turn)
+    .map((f) => ('- ' + f.label + ': ' + f.value + ' (đã nêu ở lượt ' + f.turn + ')').slice(0, 80));
+  return lines;
+}
+
+const PIN_REFERENCE_MARKERS = [
+  'the con', 'vay con', 'the thi', 'vay thi', 'thang sau', 'thang truoc',
+  'tiep theo', 'chi phi', 'bao nhieu', 'con khong', 'sao a',
+];
+
+function buildRetrievalQuery(userTexts: string[]): string {
+  const last = userTexts[userTexts.length - 1] || '';
+  if (userTexts.length < 2) return last;
+  const folded = foldViAligned(last);
+  const referential =
+    last.length <= 60 || PIN_REFERENCE_MARKERS.some((mk) => folded.includes(mk));
+  if (!referential) return last;
+  const prev = userTexts[userTexts.length - 2];
+  return prev + ' ' + last;
+}
+
 const FACILITY_NOTE =
   '\n\nLƯU Ý AN TOÀN TỪ HỆ THỐNG: trong hội thoại này, người dân đã nêu một sự kiện nguy hiểm và hiện cho biết người bệnh đang ở cơ sở y tế hoặc đang được nhân viên y tế chăm sóc trực tiếp. Nếu người dân báo dấu hiệu xấu đi, không hướng dẫn gọi 115 như trường hợp chưa được chăm sóc; hãy hướng dẫn báo ngay cho nhân viên y tế đang theo dõi và làm theo chỉ dẫn của họ, đồng thời giữ thái độ khẩn trương, nghiêm túc.';
 
@@ -579,7 +791,7 @@ export async function POST(request: Request) {
     const raw = Array.isArray(body?.messages) ? body.messages : [];
     const history = raw
       .filter((m: any) => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
-      .slice(-6)
+      .slice(-10)
       .map((m: any) => ({ role: m.role, content: m.content.slice(0, 1000) }));
     const lastUser = [...history].reverse().find((m) => m.role === 'user')?.content || '';
     if (!lastUser) {
@@ -587,7 +799,7 @@ export async function POST(request: Request) {
     }
 
     // 1) WO-WEB-14: sàng lọc khẩn cấp hai tầng trên toàn bộ lịch sử người
-    // dùng (mảng gốc, không qua cửa sổ 6 tin nhắn của AI), chạy trước
+    // dùng (mảng gốc, không qua cửa sổ tin nhắn của AI), chạy trước
     // giới hạn tần suất để câu khẩn cấp không bao giờ bị chặn bởi 429.
     const userTexts = raw
       .filter((m: any) => m && m.role === 'user' && typeof m.content === 'string')
@@ -613,9 +825,15 @@ export async function POST(request: Request) {
     }
 
     // 3) Truy xuất bài viết liên quan + gọi AI.
-    const { context, sources } = await retrieveContext(lastUser);
+    // 4) WO-WEB-13: trích thông tin ghim từ toàn bộ tin nhắn người dân
+    // và ngữ cảnh hóa truy vấn truy xuất khi câu cuối mang tính tham
+    // chiếu. Thông tin ghim chỉ sống trong lượt xử lý này, không ghi
+    // vào bất kỳ đâu.
+    const pinnedLines = PIN_FACTS_ENABLED ? extractPinnedFacts(userTexts) : [];
+    const retrievalQuery = PIN_FACTS_ENABLED ? buildRetrievalQuery(userTexts) : lastUser;
+    const { context, sources } = await retrieveContext(retrievalQuery);
     const system =
-      buildSystemPrompt(context, buildScheduleLines()) +
+      buildSystemPrompt(context, buildScheduleLines(), pinnedLines) +
       (scan.action === 'facility-note' ? FACILITY_NOTE : '');
     let reply = '';
     let provider = '';
