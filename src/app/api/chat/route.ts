@@ -285,8 +285,18 @@ async function retrieveContext(question: string) {
   // trong ngữ cảnh và né trả lời. Ghim xác định: chưa có thì chèn vào,
   // thay đoạn cuối khi nhóm đã đủ 5.
   const foldedQ = foldVi(question);
+  // Bổ sung 04/11/2026 (Maco duyệt, phát hiện tại cổng hồi quy của
+  // WO-WEB-15C): điều kiện gốc chỉ khớp cụm đã bỏ dấu của từ miễn phí
+  // nên bỏ sót các cách hỏi không thu phí, có mất tiền không, tốn
+  // tiền; hai cách hỏi mẫu V2 và V4 vì thế lúc đạt lúc trượt. Nhận
+  // diện ý định miễn phí nay gồm mọi diễn đạt tương đương.
+  const freeIntent =
+    foldedQ.includes('mien phi') ||
+    foldedQ.includes('khong thu phi') ||
+    foldedQ.includes('mat tien') ||
+    foldedQ.includes('ton tien');
   const catalogIntent =
-    foldedQ.includes('mien phi') &&
+    freeIntent &&
     (foldedQ.includes('vac xin') ||
       foldedQ.includes('tiem chung') ||
       foldedQ.includes('tiem phong'));
