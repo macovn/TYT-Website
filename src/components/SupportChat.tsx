@@ -32,6 +32,15 @@ export default function SupportChat() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  // WO-WEB-15C: mã hội thoại sinh một lần khi mở khung trò chuyện
+  // lần đầu, chỉ sống trong thẻ đang mở (không lưu vào bộ nhớ trình
+  // duyệt); tải lại trang là một hội thoại mới với mã mới.
+  const conversationIdRef = useRef<string>('');
+  useEffect(() => {
+    if (open && !conversationIdRef.current) {
+      conversationIdRef.current = crypto.randomUUID();
+    }
+  }, [open ]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
@@ -51,6 +60,7 @@ export default function SupportChat() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          conversation_id: conversationIdRef.current || undefined,
           messages: next.map((m) => ({
             role: m.role === 'user' ? 'user' : 'assistant',
             content: m.text,
