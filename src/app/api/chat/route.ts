@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { timingSafeEqual } from 'crypto';
+import { randomUUID, timingSafeEqual } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import {
   buildSystemPrompt,
@@ -45,10 +45,36 @@ function serverClient() {
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
-async function logChat(question: string, answer: string, provider: string) {
+// WO-WEB-15C: mã hội thoại do widget sinh; route chỉ chấp nhận đúng
+// định dạng UUID, thiếu hoặc sai thì tự sinh mã thay thế cho riêng
+// lượt đó. Không bao giờ từ chối trả lời vì lý do mã hội thoại.
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function resolveConversationId(body: unknown): string {
+  const raw = (body as { conversation_id?: unknown })?.conversation_id;
+  if (typeof raw === 'string' && UUID_RE.test(raw)) return raw;
+  return randomUUID();
+}
+
+async function logChat(
+  question: string,
+  answer: string,
+  provider: string,
+  conversationId: string
+) {
   try {
     const sb = serverClient();
     if (!sb) return;
+    // Ưu tiên log_chat_v2 (có mã hội thoại và số lượt do máy chủ tính);
+    // lỗi thì lùi về log_chat hiện hành để nhật ký không gián đoạn.
+    const v2 = await sb.rpc('log_chat_v2', {
+      q: question,
+      a: answer,
+      p: provider,
+      conv: conversationId,
+    });
+    if (!v2.error) return;
+    console.error('WO-WEB-15C log_chat_v2 failed, fallback v1:', v2.error.message);
     const { error } = await sb.rpc('log_chat', { q: question, a: answer, p: provider });
     if (error) console.error('WO-WEB-06 log_chat failed:', error.message);
   } catch (e) {
@@ -952,6 +978,7 @@ const REWRITE_INSTRUCTION =
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => null);
+    const conversationId = resolveConversationId(body);
     const raw = Array.isArray(body?.messages) ? body.messages : [];
     const history = raw
       .filter((m: any) => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
@@ -970,7 +997,7 @@ export async function POST(request: Request) {
       .map((m: any) => m.content as string);
     const scan = scanEmergency(userTexts);
     if (scan.action === 'emergency') {
-      await logChat(lastUser, EMERGENCY_REPLY, 'rule-emergency');
+      await logChat(lastUser, EMERGENCY_REPLY, 'rule-emergency', conversationId);
       return NextResponse.json({ reply: EMERGENCY_REPLY, provider: 'rule-emergency', sources: [] });
     }
 
@@ -984,7 +1011,7 @@ export async function POST(request: Request) {
 
     // 2) Chưa cấu hình khóa AI: trả thông điệp êm.
     if (!process.env.DEEPSEEK_API_KEY && !process.env.GEMINI_API_KEY && !process.env.OPENROUTER_API_KEY) {
-      await logChat(lastUser, NOT_CONFIGURED_REPLY, 'not-configured');
+      await logChat(lastUser, NOT_CONFIGURED_REPLY, 'not-configured', conversationId);
       return NextResponse.json({ reply: NOT_CONFIGURED_REPLY, provider: 'not-configured', sources: [] });
     }
 
@@ -1095,7 +1122,7 @@ export async function POST(request: Request) {
       finalReply = FALLBACK_REPLY;
       finalProvider = provider + '|so-la-trong-tra-loi';
     }
-    await logChat(lastUser, finalReply, finalProvider);
+    await logChat(lastUser, finalReply, finalProvider, conversationId);
     return NextResponse.json({ reply: finalReply, provider: finalProvider, sources: provider === 'error' ? [] : sources });
   } catch {
     return NextResponse.json({ reply: FALLBACK_REPLY, provider: 'error', sources: [] }, { status: 200 });
