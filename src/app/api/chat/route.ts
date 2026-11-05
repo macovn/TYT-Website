@@ -1033,6 +1033,16 @@ const SMALL_TALK_EXACT = new Set([
   'ok', 'oke', 'okay', 'vang', 'da vang', 'duoc roi', 'roi', 'uhm',
   'da biet', 'biet roi', 'da ro', 'ro roi', 'da',
 ]);
+// Hai họ mẫu ghép: mọi từ của câu đều phải thuộc tập từ xã giao
+// đóng của họ đó; chỉ cần một từ chủ đề lạ là không trúng cổng.
+const GREET_WORDS = new Set([
+  'xin', 'chao', 'ban', 'an', 'tram', 'anh', 'chi', 'em', 'buoi',
+  'sang', 'trua', 'chieu', 'toi', 'hello', 'hi', 'hey', 'a', 'nha', 'nhe',
+]);
+const THANKS_WORDS = new Set([
+  'cam', 'on', 'ban', 'an', 'tram', 'nhieu', 'lam', 'em', 'anh',
+  'chi', 'thank', 'thanks', 'you', 'a', 'nha', 'nhe',
+]);
 function isSmallTalkTurn(raw: string): boolean {
   const f = foldVi(raw).replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
   if (!f) return false;
@@ -1044,6 +1054,22 @@ function isSmallTalkTurn(raw: string): boolean {
   if (['a', 'nha', 'nhe'].includes(last)) {
     const stripped = words.slice(0, -1).join(' ');
     if (SMALL_TALK_EXACT.has(stripped)) return true;
+  }
+  // Mẫu ghép họ chào: bắt đầu bằng chao/xin chao/hello/hi.
+  if (
+    (words[0] === 'chao' || words[0] === 'hello' || words[0] === 'hi' ||
+      (words[0] === 'xin' && words[1] === 'chao')) &&
+    words.every((w) => GREET_WORDS.has(w))
+  ) {
+    return true;
+  }
+  // Mẫu ghép họ cảm ơn: bắt đầu bằng cam on hoặc thank.
+  if (
+    ((words[0] === 'cam' && words[1] === 'on') || words[0] === 'thank' ||
+      words[0] === 'thanks') &&
+    words.every((w) => THANKS_WORDS.has(w))
+  ) {
+    return true;
   }
   return false;
 }
