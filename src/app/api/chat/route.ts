@@ -363,6 +363,19 @@ async function retrieveContext(question: string) {
   return { context: parts.join('\n\n'), sources };
 }
 
+// WO-WEB-17: lỗi của từng mắt xích phải để lại dấu vết có cấu trúc
+// thay vì bị nuốt im lặng (bài học WO-WEB-15B: đường OpenRouter chết
+// mà không thấy mã lỗi). errTag rút mã trạng thái HTTP nếu có.
+function errMsg(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
+}
+function errTag(e: unknown): string {
+  const m = errMsg(e);
+  const code = m.match(/(\d{3})/);
+  if (code) return code[1];
+  return m.replace(/[^a-zA-Z0-9 -]/g, '').slice(0, 24) || 'unknown';
+}
+
 async function callDeepSeek(system: string, history: { role: string; content: string }[]): Promise<string> {
   const key = process.env.DEEPSEEK_API_KEY;
   if (!key) throw new Error('no deepseek key');
@@ -438,13 +451,29 @@ async function callGemini(system: string, history: { role: string; content: stri
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
         body: JSON.stringify({
           contents: [{ parts: [{ text: `${system}\n\n${transcript}\nAn:` }] }],
-          generationConfig: { temperature: 0.3, maxOutputTokens: 800 },
+          // WO-WEB-17: ngân sách suy luận tường minh và trần đầu ra
+          // rộng hơn, để phần suy luận không ăn hết ngân sách của
+          // câu trả lời (một trong hai cơ chế cắt cụt tại WO-WEB-15B).
+          generationConfig: {
+            temperature: 0.3,
+            maxOutputTokens: 1536,
+            thinkingConfig: { thinkingBudget: 256 },
+          },
         }),
       }
     );
     if (!res.ok) throw new Error(`gemini ${res.status}`);
     const json = await res.json();
-    const text = json?.candidates?.[0]?.content?.parts?.[0]?.text;
+    // WO-WEB-17: Gemini có thể chia câu trả lời thành nhiều phần
+    // văn bản; phải ghép toàn bộ thay vì chỉ đọc phần đầu tiên
+    // (cơ chế cắt cụt còn lại tại WO-WEB-15B).
+    const parts: unknown = json?.candidates?.[0]?.content?.parts;
+    const text = Array.isArray(parts)
+      ? parts
+          .map((p) => (p && typeof p === 'object' ? (p as { text?: unknown }).text : undefined))
+          .filter((t): t is string => typeof t === 'string')
+          .join('')
+      : '';
     if (!text) throw new Error('gemini empty');
     return text;
   } finally {
@@ -1069,22 +1098,29 @@ export async function POST(request: Request) {
             : forced === 'openrouter'
               ? await callOpenRouter(system, history)
               : await callGemini(system, history);
-      } catch {
+      } catch (e) {
+        // WO-WEB-17: ở chế độ ép, gắn mã lỗi vào trường provider
+        // của nhật ký để chẩn đoán được qua cơ sở dữ liệu.
+        console.error(`[an-chain] forced ${forced} failed:`, errMsg(e));
+        provider = forced + '|kiem-thu|loi:' + errTag(e);
         reply = FALLBACK_REPLY;
       }
     } else
     try {
       reply = await callDeepSeek(system, history);
       provider = 'deepseek';
-    } catch {
+    } catch (e1) {
+      console.error('[an-chain] deepseek failed:', errMsg(e1));
       try {
         reply = await callOpenRouter(system, history);
         provider = 'openrouter';
-      } catch {
+      } catch (e2) {
+        console.error('[an-chain] openrouter failed:', errMsg(e2));
         try {
           reply = await callGemini(system, history);
           provider = 'gemini';
-        } catch {
+        } catch (e3) {
+          console.error('[an-chain] gemini failed:', errMsg(e3));
           reply = FALLBACK_REPLY;
           provider = 'error';
         }
