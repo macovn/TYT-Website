@@ -1014,6 +1014,40 @@ function preservationOk(orig: string, rw: string): boolean {
 const REWRITE_INSTRUCTION =
   'Hãy viết lại câu trả lời ngay trên của bạn cho ngắn gọn, tối đa 250 từ. Giữ nguyên mọi hướng dẫn an toàn, dấu hiệu nguy hiểm, thông tin liên hệ và toàn bộ nội dung liệt kê. Chỉ trả về bản viết lại, không thêm lời dẫn.';
 
+// WO-WEB-18 (05/11/2026): cổng lượt xã giao. Câu người dùng cuối
+// cùng, sau khi bỏ dấu, nếu khớp nguyên câu với danh sách đóng các
+// mẫu chào hỏi, cảm ơn, tạm biệt và xác nhận ngắn (tối đa 6 từ) thì
+// lượt đó bỏ qua truy xuất và luôn trả sources rỗng, để khối Đọc
+// thêm không đính kèm các căn cứ không liên quan vào một câu chào.
+// Bộ lọc khẩn cấp chạy trước cổng này trong POST nên câu khẩn cấp
+// không bao giờ bị cổng nuốt; câu hỏi thật có chứa từ chào kèm chủ
+// đề không khớp nguyên câu với mẫu nào nên không trúng cổng.
+const SMALL_TALK_EXACT = new Set([
+  'xin chao', 'chao', 'chao ban', 'chao an', 'chao tram', 'chao anh',
+  'chao chi', 'chao em', 'xin chao ban', 'xin chao an', 'xin chao tram',
+  'chao buoi sang', 'chao buoi trua', 'chao buoi chieu', 'chao buoi toi',
+  'hello', 'hi', 'hey',
+  'cam on', 'cam on ban', 'cam on an', 'cam on tram', 'cam on nhieu',
+  'cam on em', 'cam on anh', 'cam on chi', 'thank', 'thanks', 'thank you',
+  'tam biet', 'tam biet ban', 'hen gap lai', 'bye', 'goodbye',
+  'ok', 'oke', 'okay', 'vang', 'da vang', 'duoc roi', 'roi', 'uhm',
+  'da biet', 'biet roi', 'da ro', 'ro roi', 'da',
+]);
+function isSmallTalkTurn(raw: string): boolean {
+  const f = foldVi(raw).replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!f) return false;
+  const words = f.split(' ');
+  if (words.length > 6) return false;
+  if (SMALL_TALK_EXACT.has(f)) return true;
+  // Bỏ một tiểu từ lịch sự ở cuối (ạ, nhé, nha) rồi đối chiếu lại.
+  const last = words[words.length - 1];
+  if (['a', 'nha', 'nhe'].includes(last)) {
+    const stripped = words.slice(0, -1).join(' ');
+    if (SMALL_TALK_EXACT.has(stripped)) return true;
+  }
+  return false;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => null);
@@ -1061,7 +1095,11 @@ export async function POST(request: Request) {
     // vào bất kỳ đâu.
     const pinnedLines = PIN_FACTS_ENABLED ? extractPinnedFacts(userTexts) : [];
     const retrievalQuery = PIN_FACTS_ENABLED ? buildRetrievalQuery(userTexts) : lastUser;
-    const { context, sources } = await retrieveContext(retrievalQuery);
+    // WO-WEB-18: lượt xã giao bỏ qua truy xuất, sources luôn rỗng.
+    const smallTalk = isSmallTalkTurn(lastUser);
+    const { context, sources } = smallTalk
+      ? { context: '', sources: [] as Source[] }
+      : await retrieveContext(retrievalQuery);
     const system =
       buildSystemPrompt(context, buildScheduleLines(), pinnedLines) +
       (scan.action === 'facility-note' ? FACILITY_NOTE : '');
