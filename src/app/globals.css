@@ -245,6 +245,27 @@ a {
 
 .quick-item:hover { border-color: var(--primary); }
 
+/* WO-WEB-20: Phương án A, nền màu nhạt từng thẻ truy cập nhanh */
+.quick-item.qa-blue { background: #EAF2FB; border-color: #C9DFF5; }
+.quick-item.qa-blue svg { color: #1D6FB8; }
+.quick-item.qa-blue p { color: #5F7A94; }
+.quick-item.qa-blue:hover { border-color: #1D6FB8; }
+
+.quick-item.qa-green { background: #E7F4EE; border-color: #BFE3D2; }
+.quick-item.qa-green svg { color: #0C6B58; }
+.quick-item.qa-green p { color: #5B7A6C; }
+.quick-item.qa-green:hover { border-color: #0C6B58; }
+
+.quick-item.qa-purple { background: #F3EDFB; border-color: #DCCFF5; }
+.quick-item.qa-purple svg { color: #6B4FC4; }
+.quick-item.qa-purple p { color: #7A6E9C; }
+.quick-item.qa-purple:hover { border-color: #6B4FC4; }
+
+.quick-item.qa-red { background: #FDECEA; border-color: #F5C6C0; }
+.quick-item.qa-red svg { color: #B42318; }
+.quick-item.qa-red p { color: #9C6E68; }
+.quick-item.qa-red:hover { border-color: #B42318; }
+
 /* ─── PROSE STYLES (Rich Text Content) ─── */
 .prose {
   color: var(--gray-700);
