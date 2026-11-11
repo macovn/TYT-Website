@@ -40,25 +40,25 @@ export default function Home() {
       <div className="quick-access">
         <div className="container">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-            <Link href="/dich-vu-y-te" className="quick-item">
-              <Stethoscope className="w-8 h-8 mx-auto mb-3 text-[var(--primary)]" />
+            <Link href="/dich-vu-y-te" className="quick-item qa-blue">
+              <Stethoscope className="w-8 h-8 mx-auto mb-3" />
               <h3 className="text-[15px] font-bold mb-1">Khám bệnh</h3>
-              <p className="text-[13px] text-[var(--gray-600)]">T2-T6: 7:30–16:30</p>
+              <p className="text-[13px]">T2-T6: 7:30–16:30</p>
             </Link>
-            <Link href="/dich-vu-y-te" className="quick-item">
-              <Syringe className="w-8 h-8 mx-auto mb-3 text-[var(--primary)]" />
+            <Link href="/dich-vu-y-te" className="quick-item qa-green">
+              <Syringe className="w-8 h-8 mx-auto mb-3" />
               <h3 className="text-[15px] font-bold mb-1">Tiêm chủng</h3>
-              <p className="text-[13px] text-[var(--gray-600)]">Ngày 18, 24, 25 hàng tháng</p>
+              <p className="text-[13px]">Ngày 18, 24, 25 hàng tháng</p>
             </Link>
-            <Link href="/suc-khoe" className="quick-item">
-              <Heart className="w-8 h-8 mx-auto mb-3 text-[var(--primary)]" />
+            <Link href="/suc-khoe" className="quick-item qa-purple">
+              <Heart className="w-8 h-8 mx-auto mb-3" />
               <h3 className="text-[15px] font-bold mb-1">Tư vấn sức khỏe</h3>
-              <p className="text-[13px] text-[var(--gray-600)]">Tận tâm vì người dân</p>
+              <p className="text-[13px]">Tận tâm vì người dân</p>
             </Link>
-              <Link href="/lien-he" className="quick-item">
-                <Activity className="w-8 h-8 mx-auto mb-3 text-[var(--primary)]" />
+              <Link href="/lien-he" className="quick-item qa-red">
+                <Activity className="w-8 h-8 mx-auto mb-3" />
                 <h3 className="text-[15px] font-bold mb-1">Cấp cứu 24/7</h3>
-                <p className="text-[13px] text-[var(--gray-600)]">Gọi ngay: 0203.3822.115</p>
+                <p className="text-[13px]">Gọi ngay: 0203.3822.115</p>
               </Link>
           </div>
         </div>
