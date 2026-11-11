@@ -1,39 +1,93 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Newspaper, Calendar, Eye, ChevronRight, Phone } from 'lucide-react';
+import { Newspaper, Calendar, Eye, ChevronLeft, ChevronRight, Phone } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { stripHtml, extractFirstImage, slugify, sanitizeHtml } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
+const PAGE_SIZE = 3;
+
+// WO-WEB-19 (11/11/2026): cửa sổ số trang cho thanh phân trang.
+// Luôn có trang đầu và trang cuối, kèm trang hiện tại và hai trang
+// kề; khoảng trống được thay bằng dấu chấm lửng.
+function pageWindow(current: number, total: number): (number | 'dots')[] {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+  const keep = new Set(
+    [1, 2, total - 1, total, current - 1, current, current + 1].filter(
+      (p) => p >= 1 && p <= total
+    )
+  );
+  const sorted = [...keep].sort((a, b) => a - b);
+  const out: (number | 'dots')[] = [];
+  let prev = 0;
+  for (const p of sorted) {
+    if (prev && p - prev > 1) out.push('dots');
+    out.push(p);
+    prev = p;
+  }
+  return out;
+}
+
 export default function NewsPage() {
   const [posts, setPosts] = useState<any[]>([]);
+  const [sidebarPosts, setSidebarPosts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const listTopRef = useRef<HTMLDivElement>(null);
 
-  const fetchPosts = async () => {
-    console.log("Fetching posts...");
-    const { data, error } = await supabase
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
+  const fetchPosts = async (targetPage: number) => {
+    const from = (targetPage - 1) * PAGE_SIZE;
+    const { data, error, count } = await supabase
       .from('posts')
-      .select('*')
+      .select('*', { count: 'exact' })
       .eq('category', 'news')
       .order('created_at', { ascending: false })
-      .limit(3);
-
-    console.log("POSTS:", data, error);
+      .range(from, from + PAGE_SIZE - 1);
 
     if (!error) {
       setPosts(data || []);
+      if (typeof count === 'number') setTotalCount(count);
     } else {
       console.error("Error fetching posts:", error);
     }
   };
 
+  const goToPage = (target: number) => {
+    const clamped = Math.min(Math.max(1, target), totalPages);
+    if (clamped === page) return;
+    setExpandedId(null);
+    setPage(clamped);
+    listTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   useEffect(() => {
-    fetchPosts();
+    fetchPosts(page);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
+
+  useEffect(() => {
+    // Cột phải "Bài viết xem nhiều": lấy 3 bài mới nhất một lần,
+    // không đổi theo trang đang xem (WO-WEB-19).
+    async function fetchSidebar() {
+      const { data } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('category', 'news')
+        .order('created_at', { ascending: false })
+        .limit(3);
+      if (data) setSidebarPosts(data);
+    }
+    fetchSidebar();
     
     async function fetchCategories() {
       const { data: catsData, error: catsError } = await supabase
@@ -62,7 +116,7 @@ export default function NewsPage() {
       <section className="py-14">
         <div className="container">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-8">
+            <div className="lg:col-span-2 space-y-8" ref={listTopRef}>
               <div className="grid gap-6">
                 {posts.length > 0 ? posts.map((post) => (
                   <div 
@@ -124,15 +178,42 @@ export default function NewsPage() {
                 )}
               </div>
 
-              {/* Pagination Placeholder */}
-              <div className="flex justify-center gap-2 mt-8">
-                <button className="w-10 h-10 rounded-lg bg-[var(--primary)] text-white font-bold">1</button>
-                <button className="w-10 h-10 rounded-lg bg-white border border-[var(--gray-200)] text-[var(--gray-600)] hover:bg-[var(--primary-light)] transition-colors">2</button>
-                <button className="w-10 h-10 rounded-lg bg-white border border-[var(--gray-200)] text-[var(--gray-600)] hover:bg-[var(--primary-light)] transition-colors">3</button>
-                <button className="w-10 h-10 rounded-lg bg-white border border-[var(--gray-200)] text-[var(--gray-600)] hover:bg-[var(--primary-light)] transition-colors flex items-center justify-center">
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
+              {/* WO-WEB-19: phân trang thật theo truy vấn từng trang */}
+              {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-2 mt-8 flex-wrap">
+                  <button
+                    onClick={() => goToPage(page - 1)}
+                    disabled={page <= 1}
+                    aria-label="Trang trước"
+                    className="w-10 h-10 rounded-lg bg-white border border-[var(--gray-200)] text-[var(--gray-600)] hover:bg-[var(--primary-light)] transition-colors flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  {pageWindow(page, totalPages).map((item, idx) =>
+                    item === 'dots' ? (
+                      <span key={`dots-${idx}`} className="w-8 text-center text-[var(--gray-400)] font-bold">…</span>
+                    ) : item === page ? (
+                      <button key={item} className="w-10 h-10 rounded-lg bg-[var(--primary)] text-white font-bold">{item}</button>
+                    ) : (
+                      <button
+                        key={item}
+                        onClick={() => goToPage(item)}
+                        className="w-10 h-10 rounded-lg bg-white border border-[var(--gray-200)] text-[var(--gray-600)] hover:bg-[var(--primary-light)] transition-colors"
+                      >
+                        {item}
+                      </button>
+                    )
+                  )}
+                  <button
+                    onClick={() => goToPage(page + 1)}
+                    disabled={page >= totalPages}
+                    aria-label="Trang sau"
+                    className="w-10 h-10 rounded-lg bg-white border border-[var(--gray-200)] text-[var(--gray-600)] hover:bg-[var(--primary-light)] transition-colors flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="space-y-6">
@@ -153,7 +234,7 @@ export default function NewsPage() {
               <div className="bg-white rounded-[var(--radius-lg)] p-6 shadow-[var(--shadow)]">
                 <h3 className="text-lg font-bold text-[var(--gray-800)] mb-4 pb-2 border-b-2 border-[var(--primary)] inline-block">Bài viết xem nhiều</h3>
                 <ul className="space-y-4">
-                  {posts.slice(0, 3).map((post, i) => (
+                  {sidebarPosts.map((post, i) => (
                     <li key={post.id} className="flex gap-3 items-start group">
                       <div className={`w-6 h-6 rounded bg-[var(--primary)] text-white text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5 ${i === 0 ? 'bg-[var(--accent)]' : ''}`}>
                         {i + 1}
