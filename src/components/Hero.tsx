@@ -82,18 +82,6 @@ export default function Hero() {
     return () => clearInterval(id);
   }, []);
 
-  const homNay = new Date();
-  const laNgayLamViec = homNay.getDay() >= 1 && homNay.getDay() <= 5;
-  const veMoCua =
-    moCua === null
-      ? null
-      : moCua
-        ? 'Đang mở cửa, đến 16:30'
-        : !laNgayLamViec
-          ? 'Hôm nay Trạm nghỉ (Thứ 7, Chủ nhật)'
-          : homNay.getHours() * 60 + homNay.getMinutes() < 7 * 60 + 30
-            ? 'Hôm nay Trạm mở cửa từ 7:30'
-            : 'Hôm nay đã hết giờ làm việc';
   const dotDau = dotTiem[0];
 
   return (
@@ -121,14 +109,6 @@ export default function Hero() {
                 <Phone className="w-5 h-5" /> Gọi trạm: 0203 3795 898
               </a>
             </div>
-            {veMoCua && (
-              <p className="mt-5 flex items-start gap-2 text-[14.5px] text-[var(--gray-700)] leading-relaxed">
-                <span
-                  className={`mt-[7px] w-2 h-2 rounded-full flex-none ${moCua ? 'bg-[var(--green)]' : 'bg-[var(--red)]'}`}
-                ></span>
-                <span>{veMoCua}.</span>
-              </p>
-            )}
           </div>
 
           <div className="bg-white border border-[var(--gray-200)] rounded-[var(--radius)] p-6">
