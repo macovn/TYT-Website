@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createBrowserClient as createSSRBrowserClient } from '@supabase/ssr';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -18,6 +18,8 @@ if (typeof window !== 'undefined') {
 // @supabase/auth-helpers-nextjs thay cho supabase-js thuần (vốn lưu phiên
 // ở localStorage). Nhờ phiên nằm trong cookie, middleware và layout phía
 // server mới kiểm chứng được đăng nhập + role cho khu /admin.
+// WO-WEB-27: gói auth-helpers đã bị khai tử; client phía trình duyệt nay
+// là createBrowserClient của @supabase/ssr, cùng cơ chế cookie như trước.
 // Phía server (SSR/generateMetadata) giữ client anon thuần: chỉ đọc dữ
 // liệu công khai, không mang phiên người dùng.
 // Use placeholders only if keys are missing to avoid crash, but log error
@@ -30,7 +32,7 @@ function createBrowserClient(): SupabaseClient {
       supabaseAnonKey || 'placeholder-key'
     );
   }
-  return createClientComponentClient();
+  return createSSRBrowserClient(supabaseUrl, supabaseAnonKey);
 }
 
 export const supabase: SupabaseClient =
