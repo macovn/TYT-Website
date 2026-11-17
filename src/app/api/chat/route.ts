@@ -329,12 +329,18 @@ async function retrieveContext(question: string) {
   const posts = Array.from(postMap.values())
     .map((p: any) => {
       let score = 0;
+      // WO-WEB-26: dem rieng so am tiet chu de (khong phai so thuan)
+      // khop tieu de, lam dieu kien lien quan cho khoi Doc them o duoi.
+      let titleHits = 0;
       const contentText = stripHtml(p.content);
       for (const w of syl) {
-        if ((p.title || '').toLowerCase().includes(w)) score += 3;
+        if ((p.title || '').toLowerCase().includes(w)) {
+          score += 3;
+          if (!/^\d+$/.test(w)) titleHits += 1;
+        }
         if (contentText.toLowerCase().includes(w)) score += 1;
       }
-      return { id: p.id as string, title: p.title as string, content: contentText, score };
+      return { id: p.id as string, title: p.title as string, content: contentText, score, titleHits };
     })
     .filter((p) => p.score >= 4)
     .sort((a, b) => b.score - a.score)
@@ -356,10 +362,28 @@ async function retrieveContext(question: string) {
         posts.map((p) => `- Bài "${p.title}": ${p.content.slice(0, 400)}`).join('\n')
     );
   }
-  const sources: Source[] = [
-    ...chunks.map((c) => ({ title: `${c.doc_title} — ${c.section}`, url: '' })),
-    ...posts.map((p) => ({ title: p.title, url: `/tin-tuc/${p.id}` })),
-  ];
+  // WO-WEB-26 (Maco, 17/11/2026): khoi "Doc them" duoi cau tra loi chi
+  // gom bai viet tren website lien quan that toi cau hoi. Cac doan kho
+  // tri thuc/van ban phap luat chi la ngu canh noi bo de An tra loi,
+  // khong con dua vao danh sach hien thi (truoc day hien thanh dong
+  // "Can cu: ..." lan voi bai viet, phan lon khong lien quan cau hoi).
+  // Bai viet du dieu kien hien thi khi: diem >= 6, tieu de khop it nhat
+  // mot am tiet chu de khong phai so thuan (loai khop tinh co kieu "11"
+  // trong ngay 15/11), va neu cau hoi neu thang cu the thi bai co tieu
+  // de nhac thang khac se bi loai (tranh dan bai lich tiem thang khac).
+  // Ngu canh dua vao mo hinh khong doi: van gom doan kho va 2 bai viet
+  // diem cao nhat theo nguong cu (>= 4).
+  const qMonthMatch = question.toLowerCase().match(/tháng\s*(\d{1,2})/);
+  const qMonth = qMonthMatch ? parseInt(qMonthMatch[1], 10) : null;
+  const displayPosts = posts.filter((p) => {
+    if (p.score < 6 || p.titleHits < 1) return false;
+    if (qMonth !== null) {
+      const tm = (p.title || '').toLowerCase().match(/tháng\s*(\d{1,2})/);
+      if (tm && parseInt(tm[1], 10) !== qMonth) return false;
+    }
+    return true;
+  });
+  const sources: Source[] = displayPosts.map((p) => ({ title: p.title, url: `/tin-tuc/${p.id}` }));
   return { context: parts.join('\n\n'), sources };
 }
 
