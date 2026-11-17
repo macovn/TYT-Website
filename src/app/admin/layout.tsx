@@ -1,4 +1,4 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createServerClient } from '@supabase/ssr';
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
@@ -15,7 +15,8 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = headers().get('x-pathname') || '';
+  // WO-WEB-27: Next 16 — headers() la API bat dong bo, phai await.
+  const pathname = (await headers()).get('x-pathname') || '';
 
   if (pathname === '/admin/login') {
     return <>{children}</>;
@@ -30,7 +31,27 @@ export default async function AdminLayout({
     return <>{children}</>;
   }
 
-  const supabase = createServerComponentClient({ cookies });
+  // WO-WEB-27: thay createServerComponentClient (auth-helpers da khai
+  // tu) bang createServerClient cua @supabase/ssr; cookies() cung la API
+  // bat dong bo tu Next 15.
+  const cookieStore = await cookies();
+  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          );
+        } catch {
+          // Server Component khong dat duoc cookie; middleware da lo
+          // lam moi phien dang nhap.
+        }
+      },
+    },
+  });
   const {
     data: { session },
   } = await supabase.auth.getSession();

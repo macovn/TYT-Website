@@ -1,4 +1,4 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
+import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
@@ -25,7 +25,22 @@ export async function middleware(req: NextRequest) {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!isLoginPage && supabaseUrl && supabaseAnonKey) {
-    const supabase = createMiddlewareClient({ req, res });
+    // WO-WEB-27: @supabase/auth-helpers-nextjs da bi khai tu; thay bang
+    // createServerClient cua @supabase/ssr, cookie doc/ghi qua req/res
+    // nhu co che cua createMiddlewareClient truoc day.
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        getAll() {
+          return req.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value));
+          cookiesToSet.forEach(({ name, value, options }) =>
+            res.cookies.set(name, value, options)
+          );
+        },
+      },
+    });
     const {
       data: { session },
     } = await supabase.auth.getSession();

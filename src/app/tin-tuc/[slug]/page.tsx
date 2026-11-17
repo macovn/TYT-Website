@@ -4,7 +4,8 @@ import { stripHtml, slugify, extractFirstImage } from '@/lib/utils';
 import PostDetailClient from './PostDetailClient';
 
 interface PageProps {
-  params: { slug: string };
+  // WO-WEB-27: Next 16 — params la Promise, phai await truoc khi dung.
+  params: Promise<{ slug: string }>;
 }
 
 async function getPost(slug: string) {
@@ -27,7 +28,8 @@ async function getPost(slug: string) {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const post = await getPost(params.slug);
+  const { slug } = await params;
+  const post = await getPost(slug);
   
   if (!post) {
     return {
@@ -56,6 +58,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default function PostDetailPage({ params }: PageProps) {
-  return <PostDetailClient slug={params.slug} />;
+export default async function PostDetailPage({ params }: PageProps) {
+  const { slug } = await params;
+  return <PostDetailClient slug={slug} />;
 }

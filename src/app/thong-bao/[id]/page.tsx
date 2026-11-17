@@ -4,7 +4,8 @@ import { stripHtml, extractFirstImage } from '@/lib/utils';
 import AnnouncementDetailClient from './AnnouncementDetailClient';
 
 interface PageProps {
-  params: { id: string };
+  // WO-WEB-27: Next 16 — params la Promise, phai await truoc khi dung.
+  params: Promise<{ id: string }>;
 }
 
 async function getAnnouncement(id: string) {
@@ -18,7 +19,8 @@ async function getAnnouncement(id: string) {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const announcement = await getAnnouncement(params.id);
+  const { id } = await params;
+  const announcement = await getAnnouncement(id);
   
   if (!announcement) {
     return {
@@ -47,6 +49,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default function Page({ params }: PageProps) {
-  return <AnnouncementDetailClient id={params.id} />;
+export default async function Page({ params }: PageProps) {
+  const { id } = await params;
+  return <AnnouncementDetailClient id={id} />;
 }
