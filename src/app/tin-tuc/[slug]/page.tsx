@@ -20,10 +20,13 @@ async function getPost(slug: string) {
     if (data) return data;
   }
 
+  // WO-WEB-28: bang posts khong co cot excerpt; truy van cu loi nen
+  // getPost luon tra null voi URL dang slug va generateMetadata roi ve
+  // "Khong tim thay bai viet". Mo ta da co duong du phong tu content.
   const { data: allPosts } = await supabase
     .from('posts')
-    .select('id, title, excerpt, content, thumbnail');
-  
+    .select('id, title, content, thumbnail');
+
   return allPosts?.find(p => slugify(p.title) === slug) || null;
 }
 
